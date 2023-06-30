@@ -7,8 +7,14 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
+    copy: typeof import('./src/components/TreeDataNode copy.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
+    ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElCol: typeof import('element-plus/es')['ElCol']
+    ElIcon: typeof import('element-plus/es')['ElIcon']
+    ElIconMinus: typeof import('@element-plus/icons-vue')['Minus']
+    ElIconPlus: typeof import('@element-plus/icons-vue')['Plus']
+    ElIconRight: typeof import('@element-plus/icons-vue')['Right']
     ElRadio: typeof import('element-plus/es')['ElRadio']
     ElRadioButton: typeof import('element-plus/es')['ElRadioButton']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
@@ -16,5 +22,6 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TreeDataNode: typeof import('./src/components/TreeDataNode.vue')['default']
+    TreeDataNodePanel: typeof import('./src/components/TreeDataNodePanel.vue')['default']
   }
 }

@@ -21,5 +21,9 @@ export interface DataNode {
     /**
      * 子节点
      */
-    items: DataNode[]
+    items: DataNode[],
+    /**
+     * 隐藏子节点
+     */
+    hideChild: boolean
 }
