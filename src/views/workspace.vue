@@ -9,26 +9,20 @@
       </div> -->
       <div>
         <el-button-group>
-          <el-button type="primary">
-            <i class="el-icon"><el-icon-right></el-icon-right></i>楼盘
-          </el-button>
-          <el-button type="primary">
-            <i class="el-icon"><el-icon-right></el-icon-right></i>楼栋
-          </el-button>
-          <el-button type="primary">
-            <i class="el-icon"><el-icon-right></el-icon-right></i>单元
-          </el-button>
-          <el-button type="primary">
-            <i class="el-icon"><el-icon-right></el-icon-right></i>电梯
-          </el-button>
-          <el-button type="primary">
-            <i class="el-icon"><el-icon-right></el-icon-right></i>点位
-          </el-button>
+          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>楼盘</el-button>
+          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>楼栋</el-button>
+          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>单元</el-button>
+          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>电梯</el-button>
+          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>点位</el-button>
         </el-button-group>
       </div>
       <div class="tool-box">
-        <div class="tool-btn" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i></div>
-        <div class="tool-btn" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i></div>
+        <el-button-group>
+          <el-button type="primary" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i>放大</el-button>
+          <el-button type="primary" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i>缩小</el-button>
+          <el-button type="primary" @click.prevent="expandCollapseAll(false)"><i class="el-icon"><el-icon-plus></el-icon-plus></i>展开</el-button>
+          <el-button type="primary" @click.prevent="expandCollapseAll(true)"><i class="el-icon"><el-icon-minus></el-icon-minus></i>收缩</el-button>
+        </el-button-group>
       </div>
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle">
@@ -47,9 +41,25 @@
 <script lang="ts">
 import type { DataNode } from '@/types/types'
 
+/**
+ * 组件数据模型
+ */
 interface ComponentData {
+  /**
+   * 树节点朝向 left左 right右
+   */
   direction: string,
+  /**
+   * 左树数据
+   */
   leftData: DataNode,
+  /**
+   * 右树数据
+   */
+  rightData: DataNode,
+  /**
+   * 放大缩小比例
+   */
   scale: number
 }
 
@@ -167,7 +177,8 @@ export default {
         }));
 
         return {
-            leftData,
+            leftData: leftData,
+            rightData: leftData,
             direction: 'left',
             scale: 0.6
         }
@@ -185,13 +196,31 @@ export default {
        * 放大
        */
       zoomIn () {
-        this.scale = this.scale + 0.1;
+        if (parseFloat(new Number(this.scale).toFixed(1)) < 2) {
+          this.scale = this.scale + 0.1;
+        }
       },
       /**
        * 缩小
        */
       zoomOut () {
-        this.scale = this.scale - 0.1;
+        if (parseFloat(new Number(this.scale).toFixed(1)) > 0.1) {
+          this.scale = this.scale - 0.1;
+        }
+      },
+      /**
+       * 展开收缩所有节点
+       * @param hideChild false展开  true收缩
+       */
+      expandCollapseAll (hideChild:boolean) {
+        let recursionFun = (node:DataNode) => {
+          node.hideChild = hideChild;
+          for (let cnode of node.items) {
+            recursionFun(cnode);
+          }
+        }
+        recursionFun(this.leftData);
+        recursionFun(this.rightData);
       }
     },
     mounted() {
@@ -215,22 +244,6 @@ export default {
     position: fixed
     top: 20px
     right 40px
-    border: solid 1px gray
-    padding: 3px
-    background-color: gray
-    .tool-btn
-      width: 40px
-      display: inline-block
-      font-size: 22px
-      text-align: center
-      font-weight: bolder
-      background-color: white
-      margin-right: 3px
-      &:hover
-        color: #409eff
-        background-color: #F0F0F0
-      &:last-child
-        margin-right: 0
   .workspace-column-box
     display: flex
     .workspace-column

@@ -1,13 +1,19 @@
 <template>
-  <div class="tree-data-node" :class="{'right-align': direction == 'right'}">
-      <tree-data-node-panel :dataModel="modelValue" v-if="direction === 'left'"></tree-data-node-panel>
-      <div v-if="!modelValue.hideChild">
+    <div class="tree-data-node" :class="treeDataNodeClass">
+        <tree-data-node-panel v-if="direction === 'left'"
+            :dataModel="modelValue" :direction="direction"
+            @toggleShow="nodeToggleShow"
+            ></tree-data-node-panel>
+        <div v-if="!modelValue.hideChild">
         <div v-for="(item, index) in modelValue.items" :key="item.id">
             <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
         </div>
-      </div>
-      <tree-data-node-panel :dataModel="modelValue" v-if="direction === 'right'"></tree-data-node-panel>
-  </div>
+        </div>
+        <tree-data-node-panel v-if="direction === 'right'"
+            :dataModel="modelValue" :direction="direction"
+            @toggleShow="nodeToggleShow"
+            ></tree-data-node-panel>
+    </div>
 </template>
 
 <script lang="ts">
@@ -23,6 +29,9 @@ export default {
             type: Object as PropType<DataNode>,
             required: true
         },
+        /**
+         * 方向 left right
+         */
         direction: {
             type: String
         }
@@ -33,6 +42,21 @@ export default {
         }
     },
     computed: {
+        treeDataNodeClass () {
+            return {
+                'left-direction': this.direction == 'left',
+                'right-direction': this.direction == 'right'
+            }
+        }
+    },
+    methods: {
+        /**
+         * 节点切换显示
+         * @param show 是否显示 true显示 false隐藏
+         */
+        nodeToggleShow (show:boolean) {
+            this.modelValue.hideChild = show;
+        }
     },
     mounted() {
     }
@@ -43,6 +67,6 @@ export default {
 .tree-data-node
     display: flex
     margin: 20px 0
-    &.right-align
+    &.right-direction
         justify-content: end
 </style>
