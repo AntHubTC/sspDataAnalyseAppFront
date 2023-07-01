@@ -1,3 +1,4 @@
+import { type Connection } from "jsplumb";
 /**
  * 数据节点
  */
@@ -29,5 +30,9 @@ export interface DataNode {
     /**
      * 父节点
      */
-    parent: DataNode
+    parent: DataNode,
+    /**
+     * 连接线
+     */
+    connectionLines?: Connection[]
 }

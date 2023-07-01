@@ -39,8 +39,19 @@
 </template>
 
 <script lang="ts">
-import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions } from "jsplumb";
+import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode } from '@/commons/types';
+
+interface LineConnectParams extends ConnectParams {
+  /**
+   * 源数据节点
+   */
+  sourceDataNode: DataNode,
+  /**
+   * 目标数据节点
+   */
+  targetDataNode: DataNode
+}
 
 /**
  * 组件数据模型
@@ -61,7 +72,7 @@ interface ComponentData {
   /**
    * 连线
    */
-  lineList: ConnectParams[],
+  lineList: LineConnectParams[],
   /**
    * 放大缩小比例
    */
@@ -199,7 +210,7 @@ export default {
         // 数据初始转换
         this.dataInitConvert(leftData);
         this.dataInitConvert(rightData);
-        let lineList:ConnectParams[] = this.generateLines(leftData, rightData);
+        let lineList:LineConnectParams[] = this.generateLines(leftData, rightData);
 
         // 创建jsPlumb实例
         let jsPlumbInstance = jsPlumb.getInstance();
@@ -298,15 +309,17 @@ export default {
        * @param leftData 左树节点
        * @param rgithData 右树节点
        */
-      generateLines(leftData:DataNode, rgithData:DataNode):ConnectParams[] {
-        let lines:ConnectParams[] = [];
+      generateLines(leftData:DataNode, rgithData:DataNode):LineConnectParams[] {
+        let lines:LineConnectParams[] = [];
 
         let execFun: Function = (parentNode:DataNode, childNode:DataNode) => {
           if (this.isNodeHide(childNode)) {
             // 如果节点隐藏掉了，就不能显示线条了
             return;
           }
-          let line:ConnectParams = {
+          let line:LineConnectParams = {
+              sourceDataNode: childNode,
+              targetDataNode: parentNode,
               source: `node_${childNode.nodeType}_${childNode.id}`,
               target: `node_${parentNode.nodeType}_${parentNode.id}`,
               overlays: [["Arrow", { width: 10, length: 10, location: 0.5 }]]
@@ -375,7 +388,7 @@ export default {
        */
       isNodeHide(node:DataNode):boolean {
         while (node.parent) {
-          if (node.hideChild) {
+          if (node.parent.hideChild) {
             return true;
           }
           node = node.parent;
@@ -412,8 +425,9 @@ export default {
             addEndpoint(childNode);
           });
           // 开始节点间的连线
-          this.lineList.forEach((item:ConnectParams) => {
-            this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
+          this.lineList.forEach((item:LineConnectParams) => {
+            let connection:Connection = this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
+            item.sourceDataNode.connectionLines = [connection];
           });
           // 重绘
           this.jsPlumbInstance.repaintEverything();
@@ -421,12 +435,14 @@ export default {
       }
     },
     mounted() {
-      setTimeout(() => {
+      let execFun = () => {
         this.jsPlumbInstance.ready(() => {
           // 连线
           this.drawLines();
         })
-      }, 1000);
+      }
+      setTimeout(execFun, 100);
+      // execFun();
     }
 };
 </script>
