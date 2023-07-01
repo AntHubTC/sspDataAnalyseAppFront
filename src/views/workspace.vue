@@ -27,11 +27,11 @@
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle">
       <div class="workspace-column-box">
-        <div class="workspace-column">
+        <div class="workspace-column" v-if="leftData">
           <tree-data-node v-model="leftData" :direction="direction"></tree-data-node>
         </div>
-        <div class="workspace-column">
-          <tree-data-node v-model="leftData" direction="right"></tree-data-node>
+        <div class="workspace-column" v-if="rightData">
+          <tree-data-node v-model="rightData" direction="right"></tree-data-node>
         </div>
       </div>
     </div>
@@ -39,7 +39,8 @@
 </template>
 
 <script lang="ts">
-import type { DataNode } from '@/commons/types'
+import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions } from "jsplumb";
+import type { DataNode } from '@/commons/types';
 
 /**
  * 组件数据模型
@@ -52,20 +53,39 @@ interface ComponentData {
   /**
    * 左树数据
    */
-  leftData: DataNode,
+  leftData: DataNode | null,
   /**
    * 右树数据
    */
-  rightData: DataNode,
+  rightData: DataNode | null,
+  /**
+   * 连线
+   */
+  lineList: ConnectParams[],
   /**
    * 放大缩小比例
    */
-  scale: number
+  scale: number,
+  /**
+   * jsplumb实例
+   */
+  jsPlumbInstance: jsPlumbInstance,
+  /**
+   * jsplumb默认配置信息
+   */
+  jsPlumbSetting: object,
+  /**
+   * jsplumb连线的配置
+   */
+  jsPlumbConnectOptions: object,
+  /**
+   * jsplumb线条配置
+   */
+  commonLink: EndpointOptions
 }
 
 export default {
     data() : ComponentData {
-
         let leftData:DataNode = JSON.parse(JSON.stringify({
           id: "123",
           title: "楼盘名称",
@@ -154,7 +174,7 @@ export default {
                   ]
                 },
                 {
-                  id: "1231233",
+                  id: "1231234",
                   title: "单元名称2rffas",
                   nodeType: "unit",
                   data: {
@@ -175,14 +195,79 @@ export default {
             }
           ]
         }));
+        let rightData:DataNode|null = null;
         // 数据初始转换
         this.dataInitConvert(leftData);
+        this.dataInitConvert(rightData);
+        let lineList:ConnectParams[] = this.generateLines(leftData, rightData);
+
+        // 创建jsPlumb实例
+        let jsPlumbInstance = jsPlumb.getInstance();
+        jsPlumbInstance.setZoom(0.8);
 
         return {
             leftData: leftData,
-            rightData: leftData,
+            rightData: rightData,
+            lineList: lineList,
             direction: 'left',
-            scale: 0.8
+            scale: 0.8,
+            jsPlumbInstance: jsPlumbInstance, // jsPlumb实例
+            // jsPlumb默认配置
+            jsPlumbSetting: {
+              // 动态锚点、位置自适应
+              // Anchors: ['Top', 'TopCenter', 'TopRight', 'TopLeft', 'Right', 'RightMiddle', 'Bottom', 'BottomCenter', 'BottomRight', 'BottomLeft', 'Left', 'LeftMiddle'],
+              Anchors: ['Left', 'Right'],
+              // 连线的样式 StateMachine、Flowchart，Bezier、Straight
+              Connector: ['Bezier', { curviness: 40 }],
+              // 鼠标是否拖动删除线
+              ConnectionsDetachable: false,
+              // 删除线的时候节点不删除
+              DeleteEndpointsOnDetach: false,
+              // 连线的两端端点类型：矩形 Rectangle；圆形Dot； eight: 矩形的高 ，idth: 矩形的宽
+              Endpoints: [['Dot', { radius: 2, }], ['Dot', { radius: 2 }]],
+              // 线端点的样式
+              EndpointStyle: { fill: 'skyblue', outlineWidth: 1 },
+              // 绘制连线
+              PaintStyle: {
+                stroke: '#000000',
+                strokeWidth: 1,
+                outlineStroke: 'transparent',
+                // 设定线外边的宽，单位px
+                outlineWidth: 10
+              },
+              // 绘制连线箭头
+              Overlays: [// 箭头叠加
+                ['Arrow', {
+                  width: 10, // 箭头尾部的宽度
+                  length: 8, // 从箭头的尾部到头部的距离
+                  location: 1, // 位置，建议使用0～1之间
+                  direction: 1, // 方向，默认值为1（表示向前），可选-1（表示向后）
+                  foldback: 0.623 // 折回，也就是尾翼的角度，默认0.623，当为1时，为正三角
+                }]
+              ],
+              // 绘制图的模式 svg、canvas
+              RenderMode: 'svg',
+              DragOptions: { cursor: 'pointer', zIndex: 2000 },
+              // 鼠标滑过线的样式
+              HoverPaintStyle: { stroke: 'skyblue', strokeWidth: 3, cursor: 'pointer' },
+            },
+            // 连线的配置
+            jsPlumbConnectOptions: {
+              isSource: true,
+              isTarget: true,
+              // 动态锚点、提供了4个方向 Continuous、AutoDefault
+              anchor: "Continuous",
+              overlays: [['Arrow', { width: 8, length: 8, location: 1 }]] // overlay
+            },
+            commonLink: {
+              isSource: true,
+              isTarget: true,
+              anchor: ["Perimeter", { shape: "Circle" }],
+              connector: 'Bezier',
+              endpoint: 'Dot',
+              // 不限制节点的连线数量
+              maxConnections: -1
+            }
         }
     },
     computed: {
@@ -195,11 +280,66 @@ export default {
     },
     methods: {
       /**
+       * 数据基础初始化
+       * 
+       * @param dataNode 树节点
+       */
+      dataInitConvert(dataNode:DataNode):DataNode {
+        // 为子节点设置父节点parent，方便后续子节点访问父节点
+        this.recursionTreeDataFun(dataNode, (parentNode:DataNode, childNode:DataNode) => {
+          childNode.parent = parentNode;
+        });
+
+        return dataNode;
+      },
+      /**
+       * 根据树数据节点信息生成线条连线
+       * 
+       * @param leftData 左树节点
+       * @param rgithData 右树节点
+       */
+      generateLines(leftData:DataNode, rgithData:DataNode):ConnectParams[] {
+        let lines:ConnectParams[] = [];
+
+        let execFun: Function = (parentNode:DataNode, childNode:DataNode) => {
+          if (this.isNodeHide(childNode)) {
+            // 如果节点隐藏掉了，就不能显示线条了
+            return;
+          }
+          let line:ConnectParams = {
+              source: `node_${childNode.nodeType}_${childNode.id}`,
+              target: `node_${parentNode.nodeType}_${parentNode.id}`,
+              overlays: [["Arrow", { width: 10, length: 10, location: 0.5 }]]
+            }
+            lines.push(line);
+        }
+        this.recursionTreeDataFun(leftData, execFun);
+        // TODO::// 现在左右数据一样，不将注释打开
+        // this.recursionTreeDataFun(rgithData, execFun);
+        return lines;
+      },
+      /**
+       * 递归树节点数据执行excFun函数执行操作
+       * 
+       * @param node 树节点
+       * @param execFun 功能函数
+       */
+      recursionTreeDataFun(node:DataNode|null, execFun: Function) {
+        if (null === node) {
+          return;
+        }
+        for (let cnode of node.items) {
+          execFun(node, cnode);
+          this.recursionTreeDataFun(cnode, execFun);
+        }
+      },
+      /**
        * 放大
        */
       zoomIn () {
         if (parseFloat(new Number(this.scale).toFixed(1)) < 2) {
           this.scale = this.scale + 0.1;
+          this.jsPlumbInstance.setZoom(this.scale);
         }
       },
       /**
@@ -208,6 +348,7 @@ export default {
       zoomOut () {
         if (parseFloat(new Number(this.scale).toFixed(1)) > 0.1) {
           this.scale = this.scale - 0.1;
+          this.jsPlumbInstance.setZoom(this.scale);
         }
       },
       /**
@@ -215,7 +356,10 @@ export default {
        * @param hideChild false展开  true收缩
        */
       expandCollapseAll (hideChild:boolean) {
-        let recursionFun = (node:DataNode) => {
+        let recursionFun = (node:DataNode|null) => {
+          if (null == node) {
+            return;
+          }
           node.hideChild = hideChild;
           for (let cnode of node.items) {
             recursionFun(cnode);
@@ -224,19 +368,66 @@ export default {
         recursionFun(this.leftData);
         recursionFun(this.rightData);
       },
-      dataInitConvert(dataNode:DataNode):DataNode {
-        let recursionFun = (node:DataNode) => {
-          for (let cnode of node.items) {
-            cnode.parent = node;
-            recursionFun(cnode);
+      /**
+       * 当前节点是否隐藏？
+       *   当前节点是否显示决定于当前节点是否显示和父节点是否显示
+       * @param node 当前节点
+       */
+      isNodeHide(node:DataNode):boolean {
+        while (node.parent) {
+          if (node.hideChild) {
+            return true;
           }
+          node = node.parent;
         }
-        recursionFun(dataNode);
-        return dataNode;
+        return false;
+      },
+      /**
+       * 绘制线条
+       */
+      drawLines() {
+        // 导入准备好的jsPlumb配置
+        this.jsPlumbInstance.importDefaults(this.jsPlumbSetting);
+        this.$nextTick().then(() => {
+          // 连线之前先把连线的关系清除
+          this.jsPlumbInstance.reset();
+          // 给每个节点添加锚点
+          let addEndpoint:Function = (node:DataNode) => {
+            if (this.isNodeHide(node)) {
+              // 如果节点已经隐藏了就不需要添加锚点了
+              return;
+            }
+            let id = `node_${node.nodeType}_${node.id}`;
+            this.jsPlumbInstance.draggable(id);
+            this.jsPlumbInstance.addEndpoint(id, {
+                // anchor: ['Bottom', 'Top', 'Left', 'Right'],
+                anchor: ['Left', 'Right'],
+                overlays: [
+                  ['Arrow', { width: 10, length: 8, location: 1, direction: 1, foldback: 0.623 }]
+                ],
+                maxConnections: -1
+              }, this.commonLink)
+          }
+          this.recursionTreeDataFun(this.leftData, (parentNode:DataNode, childNode:DataNode) => {
+            addEndpoint(childNode);
+          });
+          // 开始节点间的连线
+          this.lineList.forEach((item:ConnectParams) => {
+            this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
+          });
+          // 重绘
+          this.jsPlumbInstance.repaintEverything();
+        });
       }
     },
     mounted() {
-    },
+      setTimeout(() => {
+        this.jsPlumbInstance.ready(() => {
+          // 连线
+          this.drawLines();
+        })
+      }, 1000);
+    }
 };
 </script>
 

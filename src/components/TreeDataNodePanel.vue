@@ -1,12 +1,12 @@
 <template>
     <div class="node-container" :class="nodeContainerDynamicClass">
-        <div class="data-node-item" :class="dataNodeItemDynamicClass">
+        <div :id="`node_${dataModel.nodeType}_${dataModel.id}`" class="data-node-item" :class="dataNodeItemDynamicClass">
             <div class="node-tool" v-if="dataModel.items && dataModel.items.length">
                 <el-icon v-if="dataModel.hideChild" @click.prevent="hide"><folder-add /></el-icon>
                 <el-icon v-else @click.prevent="show"><folder-remove/></el-icon>
             </div>
             <div class="node-name">id:{{ dataModel.id }}</div>
-            <div class="node-name">{{ dataModel.title }}</div>
+            <div class="node-name">name:{{ dataModel.title }}</div>
         </div>
     </div>
 </template>
@@ -75,7 +75,7 @@ $point-bg-color=#D0E6FC
 .node-container
     display: flex;
     align-items: center;
-    padding: 0 10px;
+    margin: 0 40px;
     &.right-direction
         text-align: right
         .data-node-item
@@ -85,8 +85,9 @@ $point-bg-color=#D0E6FC
     .data-node-item
         width: 200px
         border: 1px solid black
-        padding: 6px
+        padding: 6px 12px
         position: relative
+        overflow: hidden
         .node-tool
             z-index: 100
             position absolute
