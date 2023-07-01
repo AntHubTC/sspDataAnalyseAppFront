@@ -39,6 +39,8 @@
 </template>
 
 <script lang="ts">
+import { getCurrentInstance } from 'vue'
+import { events } from '../bus'
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode } from '@/commons/types';
 
@@ -411,7 +413,7 @@ export default {
               return;
             }
             let id = `node_${node.nodeType}_${node.id}`;
-            this.jsPlumbInstance.draggable(id);
+            // this.jsPlumbInstance.draggable(id);
             this.jsPlumbInstance.addEndpoint(id, {
                 // anchor: ['Bottom', 'Top', 'Left', 'Right'],
                 anchor: ['Left', 'Right'],
@@ -432,6 +434,10 @@ export default {
           // 重绘
           this.jsPlumbInstance.repaintEverything();
         });
+      },
+      customNextTick(execFun:Function):void {
+        // setTimeout(execFun, 100);
+        this.$nextTick(() => {execFun();});
       }
     },
     mounted() {
@@ -443,6 +449,27 @@ export default {
       }
       setTimeout(execFun, 100);
       // execFun();
+
+      const instance:any = getCurrentInstance();
+      if (instance) {
+        events.on('nodeToggleShow', (node:DataNode) => {
+          console.info("重绘");
+          if (node.hideChild) {
+            node.items.map(cnode => {
+              // 删除对应的线条
+              cnode.connectionLines.map(connectionLine => {
+                this.jsPlumbInstance.deleteConnection(connectionLine);
+              })
+              // 删除对应的锚点
+              // this.jsPlumbInstance.deleteEndpoint
+            })
+          }
+          this.customNextTick(() => {
+            this.jsPlumbInstance.repaintEverything();
+          })
+        });
+      }
+      console.info(this.jsPlumbInstance);
     }
 };
 </script>

@@ -4,13 +4,11 @@
             :dataModel="modelValue" :direction="direction"
             @toggleShow="nodeToggleShow"
             ></tree-data-node-panel>
-        <Transition>
-            <div v-if="!modelValue.hideChild">
-                <div v-for="(item, index) in modelValue.items" :key="item.id">
-                    <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
-                </div>
+        <div v-if="!modelValue.hideChild">
+            <div v-for="(item, index) in modelValue.items" :key="item.id">
+                <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
             </div>
-        </Transition>
+        </div>
         <tree-data-node-panel v-if="direction === 'right'"
             :dataModel="modelValue" :direction="direction"
             @toggleShow="nodeToggleShow"
@@ -19,8 +17,11 @@
 </template>
 
 <script lang="ts">
-import type { PropType } from 'vue'
+import { type PropType, getCurrentInstance } from 'vue'
 import type { DataNode } from '@/commons/types'
+import { events } from '../bus'
+
+const instance:any = getCurrentInstance();
 
 export default {
     props: {
@@ -58,6 +59,7 @@ export default {
          */
         nodeToggleShow (show:boolean) {
             this.modelValue.hideChild = show;
+            events.emit('nodeToggleShow', this.modelValue);
         }
     },
     mounted() {
