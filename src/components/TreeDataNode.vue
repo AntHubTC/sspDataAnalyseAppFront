@@ -4,11 +4,13 @@
             :dataModel="modelValue" :direction="direction"
             @toggleShow="nodeToggleShow"
             ></tree-data-node-panel>
-        <div v-if="!modelValue.hideChild">
-        <div v-for="(item, index) in modelValue.items" :key="item.id">
-            <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
-        </div>
-        </div>
+        <Transition>
+            <div v-if="!modelValue.hideChild">
+                <div v-for="(item, index) in modelValue.items" :key="item.id">
+                    <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
+                </div>
+            </div>
+        </Transition>
         <tree-data-node-panel v-if="direction === 'right'"
             :dataModel="modelValue" :direction="direction"
             @toggleShow="nodeToggleShow"
@@ -69,4 +71,10 @@ export default {
     margin: 20px 0
     &.right-direction
         justify-content: end
+    .v-enter-active,.v-leave-active {
+        transition: opacity 0.5s ease;
+    }
+    .v-enter-from,.v-leave-to {
+        opacity: 0;
+    }
 </style>

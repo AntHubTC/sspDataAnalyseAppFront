@@ -175,6 +175,8 @@ export default {
             }
           ]
         }));
+        // 数据初始转换
+        this.dataInitConvert(leftData);
 
         return {
             leftData: leftData,
@@ -221,6 +223,16 @@ export default {
         }
         recursionFun(this.leftData);
         recursionFun(this.rightData);
+      },
+      dataInitConvert(dataNode:DataNode):DataNode {
+        let recursionFun = (node:DataNode) => {
+          for (let cnode of node.items) {
+            cnode.parent = node;
+            recursionFun(cnode);
+          }
+        }
+        recursionFun(dataNode);
+        return dataNode;
       }
     },
     mounted() {
