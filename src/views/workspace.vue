@@ -39,7 +39,7 @@
 </template>
 
 <script lang="ts">
-import type { DataNode } from '@/types/types'
+import type { DataNode } from '@/commons/types'
 
 /**
  * 组件数据模型
@@ -97,7 +97,7 @@ export default {
                           {
                             id: "246892580208377898",
                             title: "SJZ-A01-073-WZ01-03",
-                            nodeType: "ele",
+                            nodeType: "point",
                             data: {
                             },
                             items: [
@@ -106,7 +106,7 @@ export default {
                           {
                             id: "252717542219448379",
                             title: "SJZ-B01-073-WZ01-01",
-                            nodeType: "ele",
+                            nodeType: "point",
                             data: {
                             },
                             items: [
@@ -182,7 +182,7 @@ export default {
             leftData: leftData,
             rightData: leftData,
             direction: 'left',
-            scale: 0.6
+            scale: 0.8
         }
     },
     computed: {
@@ -263,4 +263,4 @@ export default {
       white-space: nowrap
       padding: 20px
       min-width 50%
-</style>
+</style>@/commons/types

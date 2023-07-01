@@ -13,7 +13,7 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { DataNode } from '@/types/types'
+import type { DataNode } from '@/commons/types'
 
 export default {
     props: {
@@ -71,7 +71,7 @@ $premises-bg-color=#FFE6CC
 $build-bg-color=#F8CECC
 $unit-bg-color=#E1D5E7
 $ele-bg-color=#D5E8D4
-$point-bg-color=#C0E1FB
+$point-bg-color=#D0E6FC
 .node-container
     display: flex;
     align-items: center;

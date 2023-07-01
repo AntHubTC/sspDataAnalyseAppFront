@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import type { PropType } from 'vue'
-import type { DataNode } from '@/types/types'
+import type { DataNode } from '@/commons/types'
 
 export default {
     props: {
