@@ -5,7 +5,7 @@
             @toggleShow="nodeToggleShow"
             ></tree-data-node-panel>
             <transition>
-                <div v-if="!modelValue.hideChild && modelValue.items.length" :class="{'node-item-box-z':!!modelValue.items}">
+                <div v-show="!modelValue.hideChild && modelValue.items.length" :class="{'node-item-box-z':!!modelValue.items}">
                     <div v-for="(item, index) in modelValue.items" :key="item.id" :class="{'node-item-z':!!modelValue.items}">
                         <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
                     </div>
