@@ -4,13 +4,17 @@
             :dataModel="modelValue" :direction="direction"
             @toggleShow="nodeToggleShow"
             ></tree-data-node-panel>
-            <transition>
-                <div v-show="!modelValue.hideChild && modelValue.items.length" :class="{'node-item-box-z':!!modelValue.items}">
-                    <div v-for="(item, index) in modelValue.items" :key="item.id" :class="{'node-item-z':!!modelValue.items}">
-                        <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
-                    </div>
-                </div>
-            </transition>
+        <transition>
+            <div v-show="!modelValue.hideChild && modelValue.items.length" :class="{'node-item-box-z':!!modelValue.items}">
+                <draggable v-model="modelValue.items" :options="dragOptions">
+                    <transition-group>
+                        <div v-for="(item, index) in modelValue.items" :key="item.id" :class="{'node-item-z':!!modelValue.items}">
+                            <tree-data-node v-model="modelValue.items[index]" :direction="direction"></tree-data-node>
+                        </div>
+                    </transition-group>
+                </draggable>
+            </div>
+        </transition>
         <tree-data-node-panel v-if="direction === 'right'"
             :dataModel="modelValue" :direction="direction"
             @toggleShow="nodeToggleShow"
@@ -21,11 +25,15 @@
 <script lang="ts">
 import { type PropType, getCurrentInstance } from 'vue'
 import type { DataNode } from '@/commons/types'
+import { VueDraggableNext } from 'vue-draggable-next'
 import { events } from '../bus'
 
 const instance:any = getCurrentInstance();
 
 export default {
+    components: {
+        "draggable": VueDraggableNext
+    },
     props: {
         /**
          * 节点数据
@@ -44,6 +52,16 @@ export default {
     emits: ['update:modelValue'],
     data () {
         return {
+            dragOptions: {
+                animation: 200, // 动画时间，单位毫秒
+                group: 'items', // 分组，同一分组内的元素可以互相拖拽
+                disabled: false, // 是否禁用拖拽功能
+                ghostClass: 'ghost', // 拖拽过程中占位元素的class名称
+                handle: '.tree-data-node', // 拖拽手柄，只有拖拽手柄内的元素才能被拖拽
+                sort: true, // 是否启用排序功能
+                draggable: '.tree-data-node', // 可拖拽元素的选择器
+                filter: '.ignore' // 不可拖拽元素的选择器
+            }
         }
     },
     computed: {
@@ -76,7 +94,7 @@ export default {
     &.right-direction
         justify-content: end
     .v-enter-active,.v-leave-active
-        transition: opacity 0.5s ease;
+        transition: opacity 0.6s ease;
     .v-enter-from,.v-leave-to
         opacity: 0;
     &.left-direction
