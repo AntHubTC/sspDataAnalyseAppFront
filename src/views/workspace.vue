@@ -441,35 +441,35 @@ export default {
       }
     },
     mounted() {
-      let execFun = () => {
-        this.jsPlumbInstance.ready(() => {
-          // 连线
-          this.drawLines();
-        })
-      }
-      setTimeout(execFun, 100);
-      // execFun();
+      // let execFun = () => {
+      //   this.jsPlumbInstance.ready(() => {
+      //     // 连线
+      //     this.drawLines();
+      //   })
+      // }
+      // setTimeout(execFun, 100);
+      // // execFun();
 
-      const instance:any = getCurrentInstance();
-      if (instance) {
-        events.on('nodeToggleShow', (node:DataNode) => {
-          console.info("重绘");
-          if (node.hideChild) {
-            node.items.map(cnode => {
-              // 删除对应的线条
-              cnode.connectionLines.map(connectionLine => {
-                this.jsPlumbInstance.deleteConnection(connectionLine);
-              })
-              // 删除对应的锚点
-              // this.jsPlumbInstance.deleteEndpoint
-            })
-          }
-          this.customNextTick(() => {
-            this.jsPlumbInstance.repaintEverything();
-          })
-        });
-      }
-      console.info(this.jsPlumbInstance);
+      // const instance:any = getCurrentInstance();
+      // if (instance) {
+      //   events.on('nodeToggleShow', (node:DataNode) => {
+      //     console.info("重绘");
+      //     if (node.hideChild) {
+      //       node.items.map(cnode => {
+      //         // 删除对应的线条
+      //         cnode.connectionLines.map(connectionLine => {
+      //           this.jsPlumbInstance.deleteConnection(connectionLine);
+      //         })
+      //         // 删除对应的锚点
+      //         // this.jsPlumbInstance.deleteEndpoint
+      //       })
+      //     }
+      //     this.customNextTick(() => {
+      //       this.jsPlumbInstance.repaintEverything();
+      //     })
+      //   });
+      // }
+      // console.info(this.jsPlumbInstance);
     }
 };
 </script>

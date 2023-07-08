@@ -73,9 +73,9 @@ $unit-bg-color=#E1D5E7
 $ele-bg-color=#D5E8D4
 $point-bg-color=#D0E6FC
 .node-container
-    display: flex;
-    align-items: center;
-    margin: 0 40px;
+    display: flex
+    align-items: center
+    outline: 1px solid #ffffff
     &.right-direction
         text-align: right
         .data-node-item
