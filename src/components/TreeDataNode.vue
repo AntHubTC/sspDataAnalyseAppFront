@@ -79,20 +79,48 @@ export default {
         transition: opacity 0.5s ease;
     .v-enter-from,.v-leave-to
         opacity: 0;
+    &.left-direction
+        .node-item-box-z
+            padding-left: 20px
+            &::before
+                left: 0
+            .node-item-z
+                padding-left: 20px
+                &::before
+                    left 0
+                &::after
+                    left: 0
+                &:not(:first-child)::before
+                    border-left: 1px solid #979797
+                &:not(:last-child)::after
+                    border-left: 1px solid #979797
+    &.right-direction
+        .node-item-box-z
+            padding-right: 20px
+            &::before
+                right: 0
+            &:not(:first-child)::before
+                border-right: 1px solid #979797
+            .node-item-z
+                padding-right: 20px
+                &::before
+                    right 0                    
+                &::after
+                    right: 0
+                &:not(:first-child)::before
+                    border-right: 1px solid #979797
+                &:not(:last-child)::after
+                    border-right: 1px solid #979797
     .node-item-box-z
         position relative
-        padding-left: 20px
         &:before
             content: ""
             position absolute
             top: 50%
-            left: 0
             width: 20px
             height: 0
-            border-left: 0
             border-top: 1px solid #979797
         .node-item-z
-            padding-left: 20px
             padding-top: 20px
             padding-bottom: 20px
             position relative
@@ -100,22 +128,16 @@ export default {
                 content: ""
                 position absolute
                 top 0
-                left 0
                 width: 19px
                 height: 50%
                 display: block
                 user-select: none
-            &:not(:first-child)::before
-                border-left: 1px solid #979797
             &::after
                 content: ""
                 position absolute
                 top: 50%
-                left: 0
                 width: 19px
                 height: 50%
                 user-select: none
                 border-top: 1px solid #979797
-            &:not(:last-child)::after
-                border-left: 1px solid #979797
 </style>

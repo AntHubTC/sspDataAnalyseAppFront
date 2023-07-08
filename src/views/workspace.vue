@@ -208,7 +208,7 @@ export default {
             }
           ]
         }));
-        let rightData:DataNode|null = null;
+        let rightData:DataNode|null = leftData;
         // 数据初始转换
         this.dataInitConvert(leftData);
         this.dataInitConvert(rightData);
