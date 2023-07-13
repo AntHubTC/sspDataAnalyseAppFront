@@ -1,6 +1,8 @@
 <template>
     <div class="node-container" :class="nodeContainerDynamicClass">
-        <div :id="`node_${dataModel.nodeType}_${dataModel.id}`" class="data-node-item" :class="dataNodeItemDynamicClass">
+        <!-- 必须给拖放区元素添加 dragover.prevent，才能使dragDrop事件正确执行 -->
+        <div :id="`node_${dataModel.nodeType}_${dataModel.id}`" class="data-node-item" :class="dataNodeItemDynamicClass"
+            draggable="true" @dragstart="dragStart" @dragover="dragover" @drop="drop">
             <div class="node-tool" v-if="dataModel.items && dataModel.items.length">
                 <el-icon v-if="dataModel.hideChild" @click.prevent="hide"><folder-add /></el-icon>
                 <el-icon v-else @click.prevent="show"><folder-remove/></el-icon>
@@ -14,6 +16,8 @@
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { DataNode } from '@/commons/types'
+import { DataLevel } from '@/commons/common'
+import { useDragStore } from '@/stores/dragStore'
 
 export default {
     props: {
@@ -60,6 +64,46 @@ export default {
         hide() {
             this.$emit("toggleShow", false);
         },
+        dragStart () {
+            useDragStore().setDragData(this.dataModel)
+        },
+        dragover (event) {
+            let fromDataNode:DataNode = useDragStore().getDragData(),
+                toDataNode:DataNode = this.dataModel;
+
+            // 拖动到当前节点的父节点，不允许
+            if (fromDataNode.parent.id == toDataNode.id) {
+                return
+            }
+            // 差异只差1级才运行拖放
+            let diffLevel:number = DataLevel[fromDataNode.nodeType] - DataLevel[toDataNode.nodeType]
+            if (diffLevel != 1) {
+                return
+            }
+            // 允许拖放
+            event.preventDefault();
+        },
+        drop(event) {
+            event.preventDefault();
+            
+            let fromDataNode:DataNode = useDragStore().getDragData()
+            let toDataNode:DataNode = this.dataModel;
+
+            // 将来源对象从它的父对象中移除
+            let fromDataNodeIndex = fromDataNode.parent.items.indexOf(fromDataNode)
+            if (fromDataNodeIndex > -1) {
+                fromDataNode.parent.items.splice(fromDataNodeIndex, 1)
+            }
+            // 重新指定来源对象的父对象
+            fromDataNode.parent = toDataNode;
+            // 将来源对象添加到目标对象的子项
+            toDataNode.items.push(fromDataNode)
+
+
+            console.info("drop")
+            console.info(fromDataNode)
+            console.info(toDataNode)
+        }
     },
     mounted() {
     }

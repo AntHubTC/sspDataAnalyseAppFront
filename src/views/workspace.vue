@@ -208,7 +208,7 @@ export default {
             }
           ]
         }));
-        let rightData:DataNode|null = null;
+        let rightData:DataNode|null = JSON.parse(JSON.stringify(leftData));
         // 数据初始转换
         this.dataInitConvert(leftData);
         this.dataInitConvert(rightData);
