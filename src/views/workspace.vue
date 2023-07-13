@@ -1,19 +1,10 @@
 <template>
   <div class="data-fix-workspace">
     <div class="tool-box-group">
-      <!-- <div>
-        <el-radio-group v-model="direction">
-          <el-radio-button label="left">左侧</el-radio-button>
-          <el-radio-button label="right">右侧</el-radio-button>
-        </el-radio-group>
-      </div> -->
       <div>
         <el-button-group>
-          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>楼盘</el-button>
-          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>楼栋</el-button>
-          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>单元</el-button>
-          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>电梯</el-button>
-          <el-button type="primary"><i class="el-icon"><el-icon-right></el-icon-right></i>点位</el-button>
+          <el-button type="primary" v-for="dataNodeLevelItem in dataNodeLevelItems" :key="'dataNodeLevel' + dataNodeLevelItem.level"
+            @click="dataNodeLevelItemClick(dataNodeLevelItem)"><i class="el-icon"><el-icon-right></el-icon-right></i>{{dataNodeLevelItem.levelCnName }}</el-button>
         </el-button-group>
       </div>
       <div class="tool-box">
@@ -42,7 +33,8 @@
 import { getCurrentInstance } from 'vue'
 import { events } from '../bus'
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
-import type { DataNode } from '@/commons/types';
+import type { DataNode, DataNodeLevel } from '@/commons/types';
+import { dataNodeLevelItems } from '@/commons/common'
 
 interface LineConnectParams extends ConnectParams {
   /**
@@ -94,7 +86,11 @@ interface ComponentData {
   /**
    * jsplumb线条配置
    */
-  commonLink: EndpointOptions
+  commonLink: EndpointOptions,
+  /**
+   * 数据节点层级
+   */
+  dataNodeLevelItems: DataNodeLevel[]
 }
 
 export default {
@@ -103,6 +99,7 @@ export default {
           id: "123",
           title: "楼盘名称",
           nodeType: "premises",
+          group: "123",
           data: {
           },
           items: [
@@ -209,6 +206,9 @@ export default {
           ]
         }));
         let rightData:DataNode|null = JSON.parse(JSON.stringify(leftData));
+        rightData.id = "456";
+        rightData.group = "456";
+
         // 数据初始转换
         this.dataInitConvert(leftData);
         this.dataInitConvert(rightData);
@@ -280,7 +280,8 @@ export default {
               endpoint: 'Dot',
               // 不限制节点的连线数量
               maxConnections: -1
-            }
+            },
+            dataNodeLevelItems
         }
     },
     computed: {
@@ -301,6 +302,7 @@ export default {
         // 为子节点设置父节点parent，方便后续子节点访问父节点
         this.recursionTreeDataFun(dataNode, (parentNode:DataNode, childNode:DataNode) => {
           childNode.parent = parentNode;
+          childNode.group = parentNode.group;
         });
 
         return dataNode;
@@ -438,6 +440,9 @@ export default {
       customNextTick(execFun:Function):void {
         // setTimeout(execFun, 100);
         this.$nextTick(() => {execFun();});
+      },
+      dataNodeLevelItemClick(dataNodeLevelItem):void {
+
       }
     },
     mounted() {

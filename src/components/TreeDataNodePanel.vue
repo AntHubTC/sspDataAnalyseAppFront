@@ -71,6 +71,10 @@ export default {
             let fromDataNode:DataNode = useDragStore().getDragData(),
                 toDataNode:DataNode = this.dataModel;
 
+            // 拖动到不同树上的节点，不允许(同一颗树上的节点分组相同)
+            if (fromDataNode.group != toDataNode.group) {
+                return
+            }
             // 拖动到当前节点的父节点，不允许
             if (fromDataNode.parent.id == toDataNode.id) {
                 return

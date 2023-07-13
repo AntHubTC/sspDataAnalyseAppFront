@@ -1,4 +1,23 @@
 import { type Connection } from "jsplumb";
+
+/**
+ * 数据节点层级
+ */
+export interface DataNodeLevel {
+    /**
+     * 层级中文名称
+     */
+    levelCnName: string,
+    /**
+     * 层级英文名称
+     */
+    levelName: string,
+    /**
+     * 层级
+     */
+    level: number
+}
+
 /**
  * 数据节点
  */
@@ -34,5 +53,9 @@ export interface DataNode {
     /**
      * 连接线
      */
-    connectionLines?: Connection[]
+    connectionLines?: Connection[],
+    /**
+     * 节点数据分组，一颗树一个分组
+     */
+    group: string
 }
