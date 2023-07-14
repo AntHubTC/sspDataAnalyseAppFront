@@ -57,5 +57,9 @@ export interface DataNode {
     /**
      * 节点数据分组，一颗树一个分组
      */
-    group: string
+    group: string,
+    /**
+     * 节点层级深度
+     */
+    depth: number
 }

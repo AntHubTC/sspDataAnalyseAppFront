@@ -1,9 +1,10 @@
 <template>
   <div class="data-fix-workspace">
     <div class="tool-box-group">
-      <div>
+      <div class="level-button-group">
         <el-button-group>
           <el-button type="primary" v-for="dataNodeLevelItem in dataNodeLevelItems" :key="'dataNodeLevel' + dataNodeLevelItem.level"
+            :style="currentDataNodeLevel < dataNodeLevelItem.level ? {'opacity': 0.5} : {}"
             @click="dataNodeLevelItemClick(dataNodeLevelItem)"><i class="el-icon"><el-icon-right></el-icon-right></i>{{dataNodeLevelItem.levelCnName }}</el-button>
         </el-button-group>
       </div>
@@ -34,7 +35,8 @@ import { getCurrentInstance } from 'vue'
 import { events } from '../bus'
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode, DataNodeLevel } from '@/commons/types';
-import { dataNodeLevelItems } from '@/commons/common'
+import { dataNodeLevelItems, DataLevel } from '@/commons/common';
+import { useFixDataTreeStore } from '@/stores/common'
 
 interface LineConnectParams extends ConnectParams {
   /**
@@ -290,6 +292,12 @@ export default {
           "transform": `scale(${this.scale})`,
           "transform-origin": "0 0 0"
         }
+      },
+      /**
+       * 当前数据节点层级
+       */
+      currentDataNodeLevel() {
+        return useFixDataTreeStore().getCurrentLevel();
       }
     },
     methods: {
@@ -299,10 +307,13 @@ export default {
        * @param dataNode 树节点
        */
       dataInitConvert(dataNode:DataNode):DataNode {
+        dataNode.group = "group_" + dataNode.id;
+        dataNode.depth = 1;
         // 为子节点设置父节点parent，方便后续子节点访问父节点
         this.recursionTreeDataFun(dataNode, (parentNode:DataNode, childNode:DataNode) => {
           childNode.parent = parentNode;
           childNode.group = parentNode.group;
+          childNode.depth = parentNode.depth + 1;
         });
 
         return dataNode;
@@ -437,12 +448,15 @@ export default {
           this.jsPlumbInstance.repaintEverything();
         });
       },
-      customNextTick(execFun:Function):void {
-        // setTimeout(execFun, 100);
-        this.$nextTick(() => {execFun();});
-      },
-      dataNodeLevelItemClick(dataNodeLevelItem):void {
-
+      dataNodeLevelItemClick(dataNodeLevelItem:DataNodeLevel):void {
+        useFixDataTreeStore().setCurrentLevel(dataNodeLevelItem.level);
+        let execFun = (parentNode:DataNode, childNode:DataNode) => {
+          // 隐藏子级别，非子级不隐藏(下面未注释的代码更为通用，不论多少层级)
+          // parentNode.hideChild = dataNodeLevelItem.level - 1 < DataLevel[parentNode.nodeType];
+          parentNode.hideChild = dataNodeLevelItem.level < parentNode.depth + 1;
+        }
+        this.recursionTreeDataFun(this.leftData, execFun);
+        this.recursionTreeDataFun(this.rightData, execFun);
       }
     },
     mounted() {
@@ -490,7 +504,40 @@ export default {
   padding: 15px
   .tool-box-group
     position relative
-    z-index 1000
+    z-index 100
+    .level-button-group
+      margin-left 20px
+      .el-button
+        text-align center
+        margin-right 32px
+        position relative
+      .el-button:hover,.el-button:focus
+        background-color: #409EFF
+      .el-button::before
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border-top: 16px solid #409EFF;
+        border-bottom: 16px solid #409EFF;
+        border-left: 32px solid transparent;
+        position absolute
+        left -30px
+        z-index 100
+        pointer-events: none;
+      .el-button::after
+        content: "";
+        display: block;
+        width: 0;
+        height: 0;
+        border-top: 16px solid transparent;
+        border-bottom: 16px solid transparent;
+        // border-left: 32px solid #409EFF;
+        border-left: 32px solid #409EFF;
+        position absolute
+        left 71px
+        z-index 103
+        // pointer-events: none;
   .tool-box
     position: fixed
     top: 20px

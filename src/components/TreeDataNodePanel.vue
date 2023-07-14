@@ -16,7 +16,6 @@
 <script lang="ts">
 import type { PropType } from 'vue'
 import type { DataNode } from '@/commons/types'
-import { DataLevel } from '@/commons/common'
 import { useDragStore } from '@/stores/dragStore'
 
 export default {
@@ -79,8 +78,9 @@ export default {
             if (fromDataNode.parent.id == toDataNode.id) {
                 return
             }
-            // 差异只差1级才运行拖放
-            let diffLevel:number = DataLevel[fromDataNode.nodeType] - DataLevel[toDataNode.nodeType]
+            // 差异只差1级才运行拖放(下面未注释的代码更为通用，不论多少层级)
+            // let diffLevel:number = DataLevel[fromDataNode.nodeType] - DataLevel[toDataNode.nodeType]
+            let diffLevel:number = fromDataNode.depth - toDataNode.depth
             if (diffLevel != 1) {
                 return
             }
