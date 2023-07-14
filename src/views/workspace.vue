@@ -509,7 +509,7 @@ export default {
       margin-left 20px
       .el-button
         text-align center
-        margin-right 32px
+        margin-right 30px
         position relative
       .el-button:hover,.el-button:focus
         background-color: #409EFF
