@@ -3,7 +3,7 @@
         <!-- 必须给拖放区元素添加 dragover.prevent，才能使dragDrop事件正确执行 -->
         <div :id="`node_${dataModel.nodeType}_${dataModel.id}`" class="data-node-item" :class="dataNodeItemDynamicClass"
             draggable="true" @dragstart="dragStart" @dragover="dragover" @drop="drop">
-            <div class="node-tool" v-if="dataModel.items && dataModel.items.length">
+            <div class="node-tool" v-if="dataModel.items && dataModel.items.length && currentDataNodeLevel > dataModel.depth">
                 <el-icon v-if="dataModel.hideChild" @click.prevent="hide"><folder-add /></el-icon>
                 <el-icon v-else @click.prevent="show"><folder-remove/></el-icon>
             </div>
@@ -17,6 +17,7 @@
 import type { PropType } from 'vue'
 import type { DataNode } from '@/commons/types'
 import { useDragStore } from '@/stores/dragStore'
+import { useFixDataTreeStore } from '@/stores/common'
 
 export default {
     props: {
@@ -54,6 +55,12 @@ export default {
                 "ele-item": this.dataModel.nodeType === 'ele',
                 "point-item": this.dataModel.nodeType === 'point'
             }
+        },
+        /**
+         * 当前数据节点层级
+         */
+        currentDataNodeLevel() {
+            return useFixDataTreeStore().getCurrentLevel();
         }
     },
     methods: {
