@@ -15,10 +15,8 @@
     "axios": "^1.4.0",
     "element-plus": "^2.3.7",
     "jsplumb": "^2.15.6",
-    "keymaster": "^1.6.2",
     "mitt": "^3.0.0",
     "pinia": "^2.1.3",
-    "screenfull": "^6.0.2",
     "vue": "^3.3.4",
     "vue-draggable-next": "^2.2.1",
     "vue-router": "^4.2.2"
@@ -36,6 +34,7 @@
     "eslint-plugin-vue": "^9.11.0",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.4.24",
+    // import { ElMessage } from 'element-plus' 如果不安装sass预处理器会报错。参见：https://blog.csdn.net/qq_39877681/article/details/128144799
     "sass": "^1.63.6",
     "stylus": "^0.59.0",
     "stylus-loader": "^7.1.3",

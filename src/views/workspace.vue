@@ -9,7 +9,8 @@
         </el-button-group>
       </div>
       <div class="tool-box">
-        <el-button-group>
+        <el-button-group>、
+          <el-button type="primary" @click.prevent="toggleFullScreen"><i class="el-icon"><el-icon-plus></el-icon-plus></i>全屏</el-button>
           <el-button type="primary" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i>放大</el-button>
           <el-button type="primary" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i>缩小</el-button>
           <el-button type="primary" @click.prevent="expandCollapseAll(false)"><i class="el-icon"><el-icon-plus></el-icon-plus></i>展开</el-button>
@@ -33,10 +34,14 @@
 <script lang="ts">
 import { getCurrentInstance } from 'vue'
 import { events } from '../bus'
+import screenfull from 'screenfull'
+import key from 'keymaster'
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode, DataNodeLevel } from '@/commons/types';
 import { dataNodeLevelItems, DataLevel } from '@/commons/common';
 import { useFixDataTreeStore } from '@/stores/common'
+import { getTreeData } from '@/commons/services';
+
 
 interface LineConnectParams extends ConnectParams {
   /**
@@ -77,10 +82,6 @@ interface ComponentData {
    * jsplumb实例
    */
   jsPlumbInstance: jsPlumbInstance,
-  /**
-   * jsplumb默认配置信息
-   */
-  jsPlumbSetting: object,
   /**
    * jsplumb连线的配置
    */
@@ -207,9 +208,14 @@ export default {
             }
           ]
         }));
+        
         let rightData:DataNode|null = JSON.parse(JSON.stringify(leftData));
         rightData.id = "456";
         rightData.group = "456";
+
+        this.recursionTreeDataFun(leftData, (parentNode:DataNode, childNode:DataNode) => {
+          childNode.id += "1";
+        });
 
         // 数据初始转换
         this.dataInitConvert(leftData);
@@ -218,17 +224,8 @@ export default {
 
         // 创建jsPlumb实例
         let jsPlumbInstance = jsPlumb.getInstance();
-        jsPlumbInstance.setZoom(0.8);
-
-        return {
-            leftData: leftData,
-            rightData: rightData,
-            lineList: lineList,
-            direction: 'left',
-            scale: 0.8,
-            jsPlumbInstance: jsPlumbInstance, // jsPlumb实例
-            // jsPlumb默认配置
-            jsPlumbSetting: {
+        // 导入准备好的jsPlumb配置
+        jsPlumbInstance.importDefaults({
               // 动态锚点、位置自适应
               // Anchors: ['Top', 'TopCenter', 'TopRight', 'TopLeft', 'Right', 'RightMiddle', 'Bottom', 'BottomCenter', 'BottomRight', 'BottomLeft', 'Left', 'LeftMiddle'],
               Anchors: ['Left', 'Right'],
@@ -265,7 +262,16 @@ export default {
               DragOptions: { cursor: 'pointer', zIndex: 2000 },
               // 鼠标滑过线的样式
               HoverPaintStyle: { stroke: 'skyblue', strokeWidth: 3, cursor: 'pointer' },
-            },
+            });
+        jsPlumbInstance.setZoom(0.8);
+
+        return {
+            leftData: leftData,
+            rightData: rightData,
+            lineList: lineList,
+            direction: 'left',
+            scale: 0.8,
+            jsPlumbInstance: jsPlumbInstance, // jsPlumb实例
             // 连线的配置
             jsPlumbConnectOptions: {
               isSource: true,
@@ -301,6 +307,15 @@ export default {
       }
     },
     methods: {
+      init ():void {
+        getTreeData().then((res: { right: any; left: any; }) => {
+          this.leftData = res.left;
+          this.rightData = res.right;
+          // 数据初始转换
+          this.dataInitConvert(this.leftData);
+          this.dataInitConvert(this.rightData);
+        })
+      },
       /**
        * 数据基础初始化
        * 
@@ -362,6 +377,19 @@ export default {
         }
       },
       /**
+       * 切换全屏模式
+       */
+      toggleFullScreen() {
+            // 如果不允许进入全屏，发出不允许提示（为了优化用）
+            if (!screenfull.isEnabled) {
+              this.$message("您的浏览器不能全屏");
+              return false;
+            }
+            screenfull.toggle();
+            // returning false stops the event and prevents default browser events
+            return false;
+      },
+      /**
        * 放大
        */
       zoomIn () {
@@ -414,8 +442,6 @@ export default {
        * 绘制线条
        */
       drawLines() {
-        // 导入准备好的jsPlumb配置
-        this.jsPlumbInstance.importDefaults(this.jsPlumbSetting);
         this.$nextTick().then(() => {
           // 连线之前先把连线的关系清除
           this.jsPlumbInstance.reset();
@@ -448,6 +474,9 @@ export default {
           this.jsPlumbInstance.repaintEverything();
         });
       },
+      /**
+       * 数据节点层级项被点击
+       */
       dataNodeLevelItemClick(dataNodeLevelItem:DataNodeLevel):void {
         useFixDataTreeStore().setCurrentLevel(dataNodeLevelItem.level);
         let execFun = (parentNode:DataNode, childNode:DataNode) => {
@@ -457,17 +486,40 @@ export default {
         }
         this.recursionTreeDataFun(this.leftData, execFun);
         this.recursionTreeDataFun(this.rightData, execFun);
+      },
+      /**
+       * 所有数据节点是否都已经加载完毕
+       */
+      isAllNodeLoaded() {
+        let loadObj = { isLoaded: true }
+        loadObj.isLoaded = loadObj.isLoaded && !!this.leftData.loadStatus;
+        loadObj.isLoaded = loadObj.isLoaded && !!this.rightData.loadStatus;
+        let execFun = (parentNode:DataNode, childNode:DataNode) => {
+          loadObj.isLoaded = loadObj.isLoaded && !!childNode.loadStatus;
+        }
+        this.recursionTreeDataFun(this.leftData, execFun);
+        this.recursionTreeDataFun(this.rightData, execFun);
+
+        return loadObj.isLoaded
       }
     },
     mounted() {
-      // let execFun = () => {
-      //   this.jsPlumbInstance.ready(() => {
-      //     // 连线
-      //     this.drawLines();
-      //   })
-      // }
-      // setTimeout(execFun, 100);
-      // // execFun();
+      key('[', this.zoomOut);
+      key(']', this.zoomIn);
+      // 没有替换掉浏览器的默认F11
+      // key('F11', this.toggleFullScreen);
+
+      let execFun = () => {
+        if (this.isAllNodeLoaded()) {
+          this.jsPlumbInstance.ready(() => {
+            // 连线
+            // this.drawLines();
+          })
+        } else {
+          this.$nextTick(execFun)
+        }
+      }
+      this.$nextTick(execFun)
 
       // const instance:any = getCurrentInstance();
       // if (instance) {
@@ -489,6 +541,12 @@ export default {
       //   });
       // }
       // console.info(this.jsPlumbInstance);
+    },
+    unmounted () {
+      key.unbind('[]',']');
+    },
+    created () {
+      this.init();
     }
 };
 </script>
@@ -501,12 +559,14 @@ export default {
   width: 100%
   height: 100%
   overflow: auto
-  padding: 15px
+  padding: 55px 15px
   .tool-box-group
     position relative
     z-index 100
     .level-button-group
-      margin-left 20px
+      position: fixed
+      top: 20px
+      left 40px
       .el-button
         text-align center
         margin-right 30px

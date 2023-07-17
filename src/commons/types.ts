@@ -61,5 +61,9 @@ export interface DataNode {
     /**
      * 节点层级深度
      */
-    depth: number
+    depth: number,
+    /**
+     * 加载状态 空。未加载 1.已加载
+     */
+    loadStatus?: number
 }

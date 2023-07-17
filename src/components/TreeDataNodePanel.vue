@@ -117,6 +117,8 @@ export default {
         }
     },
     mounted() {
+        // 已经加载
+        this.dataModel.loadStatus = 1;
     }
 };
 </script>
@@ -143,6 +145,7 @@ $point-bg-color=#D0E6FC
         padding: 6px 12px
         position: relative
         overflow: hidden
+        cursor grab
         .node-tool
             z-index: 100
             position absolute

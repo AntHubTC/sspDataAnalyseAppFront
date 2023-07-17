@@ -25,7 +25,12 @@ export default (({ command, mode }: ConfigEnv): UserConfigExport => {
         resolvers: [ElementPlusResolver()],
       }),
       Components({
-        resolvers: [ElementPlusResolver()],
+        resolvers: [ElementPlusResolver(
+          // {
+          //   // 按需引入修改主题色添加这一行，使用预处理样式
+          //   importStyle: "sass"
+          // }
+        )],
       }),
       ElementPlus({
         useSource: true
@@ -69,12 +74,12 @@ export default (({ command, mode }: ConfigEnv): UserConfigExport => {
       strictPort: true,
       // 接口代理
       proxy: {
-        '/workwxht': {
-          target: 'http://192.168.1.101:9001',
+        '/api': {
+          target: 'http://localhost:8091',
           // 允许跨域
           changeOrigin: true,
           // 重写地址
-          rewrite: (path) => path.replace('/workwxht/', '/')
+          rewrite: (path) => path.replace('/api/', '/')
         }
       }
 
