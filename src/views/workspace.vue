@@ -1,6 +1,6 @@
 <template>
   <div class="data-fix-workspace" ref="baseEl">
-    <div class="tool-box-group">
+    <div class="tool-box-group" id="step1">
       <div class="level-button-group">
         <el-button-group>
           <el-button type="primary" v-for="dataNodeLevelItem in dataNodeLevelItems" :key="'dataNodeLevel' + dataNodeLevelItem.level"
@@ -16,15 +16,16 @@
           <el-button type="primary" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i>缩小</el-button>
           <el-button type="primary" @click.prevent="expandCollapseAll(false)"><i class="el-icon"><el-icon-plus></el-icon-plus></i>展开</el-button>
           <el-button type="primary" @click.prevent="expandCollapseAll(true)"><i class="el-icon"><el-icon-minus></el-icon-minus></i>收缩</el-button>
+          <el-button type="primary" @click.prevent="help"><i class="el-icon"><el-icon-help></el-icon-help></i>帮助</el-button>
         </el-button-group>
       </div>
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle" ref="mainWorkSpace">
       <div class="workspace-column-box">
-        <div class="workspace-column" v-if="leftData">
+        <div class="workspace-column left-column"  v-if="leftData">
           <tree-data-node v-model="leftData" :direction="direction"></tree-data-node>
         </div>
-        <div class="workspace-column" v-if="rightData">
+        <div class="workspace-column right-column" v-if="rightData">
           <tree-data-node v-model="rightData" direction="right"></tree-data-node>
         </div>
       </div>
@@ -48,6 +49,7 @@ import { useFixDataTreeStore } from '@/stores/common'
 import { getTreeData } from '@/commons/services';
 import { de } from 'element-plus/es/locale';
 import ExportDialog from '../components/ExportDialog.vue'
+import initIntroJs from './workspaceIntro'
 
 
 interface LineConnectParams extends ConnectParams {
@@ -492,6 +494,12 @@ export default {
 
           this.$refs.exportDialog.closeDialog();
         });
+      },
+      /**
+       * 帮助按钮
+       */
+      help () {
+        initIntroJs();
       }
     },
     mounted() {

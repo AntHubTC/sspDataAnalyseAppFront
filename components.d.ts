@@ -14,6 +14,7 @@ declare module 'vue' {
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElIconDownload: typeof import('@element-plus/icons-vue')['Download']
+    ElIconHelp: typeof import('@element-plus/icons-vue')['Help']
     ElIconMinus: typeof import('@element-plus/icons-vue')['Minus']
     ElIconPlus: typeof import('@element-plus/icons-vue')['Plus']
     ElIconRight: typeof import('@element-plus/icons-vue')['Right']

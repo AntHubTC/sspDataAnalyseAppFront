@@ -20,6 +20,5 @@ export const useFixDataTreeStore = defineStore('fixDataTreeStore', () => {
     return currentLevelStore.value;
   }
 
-
   return { setCurrentLevel, getCurrentLevel }
 })

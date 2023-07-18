@@ -5,7 +5,10 @@ jspdf 用于将关系图导出为PDF
 "sass": "^1.63.6",
 
 
-
+// 制作新手教程功能
+npm install intro.js --save
+// 支持ts
+npm i --save-dev @types/intro.js
 
 
 
