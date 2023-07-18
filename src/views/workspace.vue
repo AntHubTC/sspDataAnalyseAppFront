@@ -1,5 +1,5 @@
 <template>
-  <div class="data-fix-workspace">
+  <div class="data-fix-workspace" ref="baseEl">
     <div class="tool-box-group">
       <div class="level-button-group">
         <el-button-group>
@@ -10,6 +10,7 @@
       </div>
       <div class="tool-box">
         <el-button-group>、
+          <el-button type="primary" @click.prevent="screenToImg"><i class="el-icon"><el-icon-plus></el-icon-plus></i>导出PNG</el-button>
           <el-button type="primary" @click.prevent="toggleFullScreen"><i class="el-icon"><el-icon-plus></el-icon-plus></i>全屏</el-button>
           <el-button type="primary" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i>放大</el-button>
           <el-button type="primary" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i>缩小</el-button>
@@ -18,7 +19,7 @@
         </el-button-group>
       </div>
     </div>
-    <div class="main-workspace" :style="mainWorkspaceStyle">
+    <div class="main-workspace" :style="mainWorkspaceStyle" ref="mainWorkSpace">
       <div class="workspace-column-box">
         <div class="workspace-column" v-if="leftData">
           <tree-data-node v-model="leftData" :direction="direction"></tree-data-node>
@@ -36,11 +37,13 @@ import { getCurrentInstance } from 'vue'
 import { events } from '../bus'
 import screenfull from 'screenfull'
 import key from 'keymaster'
+import html2canvas from 'html2canvas';
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode, DataNodeLevel } from '@/commons/types';
 import { dataNodeLevelItems, DataLevel } from '@/commons/common';
 import { useFixDataTreeStore } from '@/stores/common'
 import { getTreeData } from '@/commons/services';
+import { de } from 'element-plus/es/locale';
 
 
 interface LineConnectParams extends ConnectParams {
@@ -98,129 +101,7 @@ interface ComponentData {
 
 export default {
     data() : ComponentData {
-        let leftData:DataNode = JSON.parse(JSON.stringify({
-          id: "123",
-          title: "楼盘名称",
-          nodeType: "premises",
-          group: "123",
-          data: {
-          },
-          items: [
-            {
-              id: "1231",
-              title: "楼栋名称1",
-              nodeType: "build",
-              data: {
-              },
-              items: [
-                {
-                  id: "12311",
-                  title: "单元名称1",
-                  nodeType: "unit",
-                  data: {
-                  },
-                  items: [
-                    {
-                      id: "123111",
-                      title: "电梯名称1",
-                      nodeType: "ele",
-                      data: {
-                      },
-                      items: [
-                          {
-                            id: "246892580208377898",
-                            title: "SJZ-A01-073-WZ01-03",
-                            nodeType: "point",
-                            data: {
-                            },
-                            items: [
-                            ]
-                          },
-                          {
-                            id: "252717542219448379",
-                            title: "SJZ-B01-073-WZ01-01",
-                            nodeType: "point",
-                            data: {
-                            },
-                            items: [
-                            ]
-                          }
-                      ]
-                    },
-                    {
-                      id: "123122",
-                      title: "电梯名称2",
-                      nodeType: "ele",
-                      data: {
-                      },
-                      items: [
-                      ]
-                    }
-                  ]
-                },
-                {
-                  id: "12312",
-                  title: "单元名称2",
-                  nodeType: "unit",
-                  data: {
-                  },
-                  items: [
-                  ]
-                }
-              ]
-            },
-            {
-              id: "1232",
-              title: "楼栋名称2",
-              nodeType: "build",
-              hideChild: true,
-              data: {
-              },
-              items: [
-                {
-                  id: "1231233",
-                  title: "单元名称asdfasd",
-                  nodeType: "unit",
-                  data: {
-                  },
-                  items: [
-                  ]
-                },
-                {
-                  id: "1231234",
-                  title: "单元名称2rffas",
-                  nodeType: "unit",
-                  data: {
-                  },
-                  items: [
-                  ]
-                }
-              ]
-            },
-            {
-              id: "1233",
-              title: "楼栋名称3",
-              nodeType: "build",
-              data: {
-              },
-              items: [
-              ]
-            }
-          ]
-        }));
-        
-        let rightData:DataNode|null = JSON.parse(JSON.stringify(leftData));
-        rightData.id = "456";
-        rightData.group = "456";
-
-        this.recursionTreeDataFun(leftData, (parentNode:DataNode, childNode:DataNode) => {
-          childNode.id += "1";
-        });
-
-        // 数据初始转换
-        this.dataInitConvert(leftData);
-        this.dataInitConvert(rightData);
-        let lineList:LineConnectParams[] = this.generateLines(leftData, rightData);
+        // let lineList:LineConnectParams[] = this.generateLines(leftData, rightData);
 
         // 创建jsPlumb实例
         let jsPlumbInstance = jsPlumb.getInstance();
@@ -266,9 +147,9 @@ export default {
         jsPlumbInstance.setZoom(0.8);
 
         return {
-            leftData: leftData,
-            rightData: rightData,
-            lineList: lineList,
+            leftData: null,
+            rightData: null,
+            lineList: null,
             direction: 'left',
             scale: 0.8,
             jsPlumbInstance: jsPlumbInstance, // jsPlumb实例
@@ -322,6 +203,9 @@ export default {
        * @param dataNode 树节点
        */
       dataInitConvert(dataNode:DataNode):DataNode {
+        if (null == dataNode) {
+          return;
+        }
         dataNode.group = "group_" + dataNode.id;
         dataNode.depth = 1;
         // 为子节点设置父节点parent，方便后续子节点访问父节点
@@ -501,6 +385,46 @@ export default {
         this.recursionTreeDataFun(this.rightData, execFun);
 
         return loadObj.isLoaded
+      },
+      /**
+       * 导出图片
+       */
+      screenToImg () {
+        /* 
+          经过多次尝试，结果导出结果只有可视区域内容，滚动条外都导出不了，网上找了很久发现是这样的：
+            html2canvas截图成功的一个标准就是，外层div的高度跟里面需要截图的内容的高度一致就能完整的截图，（比如
+            需要截图的外层div是800的高度有滚动条，里面的需要截图的内容是1800的高度，截图的时候就把1800的高度给需要截图的那个div就能完整截图）
+            https://blog.csdn.net/xiakekeali/article/details/126049126
+        */
+        const mainWorkSpaceEl = this.$refs.mainWorkSpace as HTMLElement;
+        const baseEl = this.$refs.baseEl as HTMLElement;
+        const scrollHeight = baseEl.scrollHeight;
+        const oriHeight = baseEl.style.height;
+        baseEl.style.height = scrollHeight + "px";
+
+        html2canvas(mainWorkSpaceEl, {
+          allowTaint: true,
+          useCORS: false, // 如果导出内容涉及到跨域资源（如图片），需要设置为true
+          logging: false,
+          height: baseEl.scrollHeight,
+          width: baseEl.scrollWidth,
+          scale: 2,
+          y: 20
+        }).then(function(canvas) {
+          baseEl.style.height = oriHeight;
+          // 创建一个新的图片元素
+          var img = new Image();
+          img.src = canvas.toDataURL("image/png");
+          
+          // 创建一个下载链接
+          var link = document.createElement("a");
+          link.href = img.src;
+          link.download = "screenshot.png";
+          
+          // 触发点击事件以下载图片
+          link.click();
+          //link.remove();
+        });
       }
     },
     mounted() {
