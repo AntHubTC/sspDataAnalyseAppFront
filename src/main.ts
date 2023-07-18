@@ -7,14 +7,19 @@ import service from './commons/request'
 import ElementPlus from 'element-plus'
 import * as Icons from '@element-plus/icons-vue'
 
-import { createApp } from 'vue'
+import { createApp, type Directive } from 'vue'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import mitt from 'mitt'
+import * as directives from './tool/directives';
 
 const app = createApp(App)
-
+// 循环注册指令
+Object.keys(directives).forEach(key => {
+    app.directive(key, (directives as { [key: string ]: Directive })[key]);
+});
+// axios
 app.provide('$axios', service)
 // import { ref, reactive, inject, onMounted} from "vue";
 // const $axios = inject("$axios");

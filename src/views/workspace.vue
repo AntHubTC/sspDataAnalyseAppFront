@@ -9,8 +9,8 @@
         </el-button-group>
       </div>
       <div class="tool-box">
-        <el-button-group>、
-          <el-button type="primary" @click.prevent="screenToImg"><i class="el-icon"><el-icon-plus></el-icon-plus></i>导出PNG</el-button>
+        <el-button-group>
+          <el-button type="primary" @click.prevent="exportDiagram"><i class="el-icon"><el-icon-download></el-icon-download></i>PNG</el-button>
           <el-button type="primary" @click.prevent="toggleFullScreen"><i class="el-icon"><el-icon-plus></el-icon-plus></i>全屏</el-button>
           <el-button type="primary" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i>放大</el-button>
           <el-button type="primary" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i>缩小</el-button>
@@ -29,6 +29,8 @@
         </div>
       </div>
     </div>
+
+    <export-dialog ref="exportDialog" @exportPNG="exportPNG" @exportPDF="exportPDF"></export-dialog>
   </div>
 </template>
 
@@ -37,6 +39,7 @@ import { getCurrentInstance } from 'vue'
 import { events } from '../bus'
 import screenfull from 'screenfull'
 import key from 'keymaster'
+import JsPDF from 'jspdf'
 import html2canvas from 'html2canvas';
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode, DataNodeLevel } from '@/commons/types';
@@ -44,6 +47,7 @@ import { dataNodeLevelItems, DataLevel } from '@/commons/common';
 import { useFixDataTreeStore } from '@/stores/common'
 import { getTreeData } from '@/commons/services';
 import { de } from 'element-plus/es/locale';
+import ExportDialog from '../components/ExportDialog.vue'
 
 
 interface LineConnectParams extends ConnectParams {
@@ -100,6 +104,7 @@ interface ComponentData {
 }
 
 export default {
+  components: { ExportDialog },
     data() : ComponentData {
         // let lineList:LineConnectParams[] = this.generateLines(leftData, rightData);
 
@@ -387,9 +392,9 @@ export default {
         return loadObj.isLoaded
       },
       /**
-       * 导出图片
+       * 将屏数据关系图转换到canvas
        */
-      screenToImg () {
+      screenToCanvas(callback) {
         /* 
           经过多次尝试，结果导出结果只有可视区域内容，滚动条外都导出不了，网上找了很久发现是这样的：
             html2canvas截图成功的一个标准就是，外层div的高度跟里面需要截图的内容的高度一致就能完整的截图，（比如
@@ -412,6 +417,66 @@ export default {
           y: 20
         }).then(function(canvas) {
           baseEl.style.height = oriHeight;
+          callback && callback(canvas);
+        });
+      },
+      exportDiagram (this:{$refs:any}) {
+        this.$refs.exportDialog.openDialog();
+      },
+      /**
+       * 导出pdf图片
+       */
+      async exportPDF(this:{$refs:any, screenToCanvas:Function}) {
+        this.screenToCanvas((canvas:HTMLCanvasElement) => {
+            let contentWidth = canvas.width;
+            let contentHeight = canvas.height;
+            let a4Height = 841.89;
+            let a4Width = 595.28;
+            let per = (contentWidth / a4Width) * 0.75; //这个主要是为了防止宽度不够的
+            //一页pdf显示html页面生成的canvas高度;
+            let pageHeight = (contentWidth / a4Width) * a4Height;
+            //未生成pdf的html页面高度
+            let leftHeight = contentHeight;
+            //一页pdf显示html页面生成的canvas高度;
+            var a4HeightRef = Math.floor((canvas.width / a4Width) * a4Height);
+            //页面偏移
+            let position = 0;
+            //a4纸的尺寸[595.28,841.89]，html页面生成的canvas在pdf中图片的宽高
+            let imgWidth = a4Width;
+            let imgHeight = (a4Width / contentWidth) * contentHeight;
+            let pageData = canvas.toDataURL("image/jpeg", 1.0);
+            let pdf = new JsPDF("p", "pt", [a4Width, a4Height]); //不分页    
+            if (leftHeight < pageHeight) {
+                pdf.addImage(pageData, "JPEG", 0, 0, imgWidth, imgHeight);
+            } else {
+                while (leftHeight > 0) {
+                    pdf.addImage(
+                        pageData,
+                        "JPEG",
+                        0,
+                        position,
+                        imgWidth,
+                        imgHeight
+                    );
+                    leftHeight -= pageHeight;
+                    position -= a4Height;
+                    //避免添加空白页
+                    if (leftHeight > 0) {
+                        pdf.addPage();
+                    }
+                }
+            }
+
+            pdf.save('title');
+
+            this.$refs.exportDialog.closeDialog();
+          });
+      },
+      /**
+       * 导出图片
+       */
+      async exportPNG (this:{$refs:any, screenToCanvas:Function}) {
+        this.screenToCanvas((canvas:HTMLCanvasElement) => {
           // 创建一个新的图片元素
           var img = new Image();
           img.src = canvas.toDataURL("image/png");
@@ -423,7 +488,9 @@ export default {
           
           // 触发点击事件以下载图片
           link.click();
-          //link.remove();
+          link.remove();
+
+          this.$refs.exportDialog.closeDialog();
         });
       }
     },

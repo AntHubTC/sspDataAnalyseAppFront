@@ -1,48 +1,13 @@
-{
-  "name": "srdatafix",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "dev": "vite",
-    "build": "run-p type-check build-only",
-    "preview": "vite preview",
-    "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
-  },
-  "dependencies": {
-    "@element-plus/icons-vue": "^2.1.0",
-    "axios": "^1.4.0",
-    "element-plus": "^2.3.7",
-    "jsplumb": "^2.15.6",
-    "mitt": "^3.0.0",
-    "pinia": "^2.1.3",
-    "vue": "^3.3.4",
-    "vue-draggable-next": "^2.2.1",
-    "vue-router": "^4.2.2"
-  },
-  "devDependencies": {
-    "@rushstack/eslint-patch": "^1.2.0",
-    "@tsconfig/node18": "^2.0.1",
-    "@types/node": "^18.16.17",
-    "@vitejs/plugin-vue": "^4.2.3",
-    "@vitejs/plugin-vue-jsx": "^3.0.1",
-    "@vue/eslint-config-typescript": "^11.0.3",
-    "@vue/tsconfig": "^0.4.0",
-    "autoprefixer": "^10.4.14",
-    "eslint": "^8.39.0",
-    "eslint-plugin-vue": "^9.11.0",
-    "npm-run-all": "^4.1.5",
-    "postcss": "^8.4.24",
-    // import { ElMessage } from 'element-plus' 如果不安装sass预处理器会报错。参见：https://blog.csdn.net/qq_39877681/article/details/128144799
-    "sass": "^1.63.6",
-    "stylus": "^0.59.0",
-    "stylus-loader": "^7.1.3",
-    "typescript": "~5.0.4",
-    "unplugin-auto-import": "^0.16.4",
-    "unplugin-element-plus": "^0.7.1",
-    "unplugin-vue-components": "^0.25.1",
-    "vite": "^4.3.9",
-    "vue-tsc": "^1.6.5"
-  }
-}
+jspdf 用于将关系图导出为PDF
+
+
+// import { ElMessage } from 'element-plus' 如果不安装sass预处理器会报错。参见：https://blog.csdn.net/qq_39877681/article/details/128144799
+"sass": "^1.63.6",
+
+
+
+
+
+
+
+
