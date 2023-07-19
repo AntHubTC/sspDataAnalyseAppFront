@@ -35,6 +35,11 @@ const initIntroJs:Function = () => {
             position: 'center',
         },
         {
+            title: '快捷键支持',
+            intro: '<div>[ 缩小<br/>] 放大</div>',
+            position: 'center',
+        },
+        {
             title: '使用说明导航',
             intro: '工具介绍完毕，让我们开始修复数据吧！',
             position: 'center',
