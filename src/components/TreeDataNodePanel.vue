@@ -140,7 +140,7 @@ $point-bg-color=#D0E6FC
                 left: 0
                 right inherit
     .data-node-item
-        width: 200px
+        width: 222px
         border: 1px solid black
         padding: 6px 12px
         position: relative

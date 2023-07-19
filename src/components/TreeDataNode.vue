@@ -128,7 +128,7 @@ export default {
             border-top: 1px solid #979797
         .node-item-z
             padding-top: 20px
-            padding-bottom: 20px
+            padding-bottom: 0
             position relative
             &::before
                 content: ""
