@@ -37,7 +37,7 @@ export interface DataNode {
     /**
      * 节点附带的数据
      */
-    data: Object,
+    data: any,
     /**
      * 子节点
      */

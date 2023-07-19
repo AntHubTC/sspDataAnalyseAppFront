@@ -608,4 +608,6 @@ export default {
       white-space: nowrap
       padding: 20px
       min-width 50%
+    &.left-column
+      border-right 1px dashed gray
 </style>@/commons/types

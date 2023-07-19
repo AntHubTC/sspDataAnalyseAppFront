@@ -2,13 +2,20 @@
     <div class="node-container" :class="nodeContainerDynamicClass">
         <!-- 必须给拖放区元素添加 dragover.prevent，才能使dragDrop事件正确执行 -->
         <div :id="`node_${dataModel.nodeType}_${dataModel.id}`" class="data-node-item" :class="dataNodeItemDynamicClass"
-            draggable="true" @dragstart="dragStart" @dragover="dragover" @drop="drop">
+            draggable="true" @dragstart="dragStart" @dragover="dragover" @drop="drop" @click.prevent="nodeClick">
             <div class="node-tool" v-if="dataModel.items && dataModel.items.length && currentDataNodeLevel > dataModel.depth">
                 <el-icon v-if="dataModel.hideChild" @click.prevent="hide"><folder-add /></el-icon>
                 <el-icon v-else @click.prevent="show"><folder-remove/></el-icon>
             </div>
-            <div class="node-name">id:{{ dataModel.id }}</div>
-            <div class="node-name">name:{{ dataModel.title }}</div>
+            <template v-if="direction == 'right'">
+                <!-- <div class="node-name">id:{{ dataModel.id }}</div> -->
+                <div class="node-name">sspId:{{ dataModel.data.sspId }}</div>
+                <div class="node-name">name:{{ dataModel.title }}</div>
+            </template>
+            <template v-else>
+                <div class="node-name">id:{{ dataModel.id }}</div>
+                <div class="node-name">name:{{ dataModel.title }}</div>
+            </template>
         </div>
     </div>
 </template>
@@ -35,7 +42,7 @@ export default {
             type: String
         }
     },
-    emits: ['toggleShow'],
+    emits: ['toggleShow', 'nodeClick'],
     data () {
         return {
         }
@@ -114,6 +121,10 @@ export default {
             console.info("drop")
             console.info(fromDataNode)
             console.info(toDataNode)
+        },
+        nodeClick () {
+            // TODO:: 双击查看详情
+            this.$emit('nodeClick', this.dataModel);
         }
     },
     mounted() {
@@ -140,7 +151,7 @@ $point-bg-color=#D0E6FC
                 left: 0
                 right inherit
     .data-node-item
-        width: 222px
+        min-width: 222px
         border: 1px solid black
         padding: 6px 12px
         position: relative
