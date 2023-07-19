@@ -1,6 +1,12 @@
 import 'intro.js/introjs.css' // introjs默认css样式
 // introjs还提供了多种主题，可以通过以下方式引入
-import 'intro.js/themes/introjs-modern.css' // introjs主题
+import 'intro.js/themes/introjs-modern.css'
+// import 'intro.js/themes/introjs-flattener.css'
+// import 'intro.js/themes/introjs-dark.css'
+// import 'intro.js/themes/introjs-nassim.css'
+// import 'intro.js/themes/introjs-nazanin.css'
+// import 'intro.js/themes/introjs-royal.css'
+
 import IntroJs from 'intro.js' // introjs库
 
 const initIntroJs:Function = () => {
