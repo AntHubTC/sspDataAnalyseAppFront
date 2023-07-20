@@ -9,7 +9,7 @@
             </div>
             <template v-if="direction == 'right'">
                 <!-- <div class="node-name">id:{{ dataModel.id }}</div> -->
-                <div class="node-name">name:&nbsp;{{ dataModel.title }}</div>
+                <div class="node-name">名称:&nbsp;{{ dataModel.title }}</div>
                 <div class="node-name">sspId:&nbsp;{{ dataModel.data.sspId || "无" }}</div>
                 <div class="node-name" v-if="dataModel.depth == 4" >电梯编码:&nbsp;{{ dataModel.data.eleNum || '无'}}</div>
             </template>
@@ -206,7 +206,8 @@ $point-bg-color=#D0E6FC
                 right inherit
     .data-node-item
         min-width: 222px
-        border: 1px solid black
+        // border: 1px solid black
+        border: 1px solid #959595
         padding: 6px 12px
         position: relative
         overflow: hidden

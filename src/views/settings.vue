@@ -107,7 +107,6 @@ export default {
         }
     },
     created () {
-        debugger
         getUserConfig()
             .then((data:any) => {
                 this.formData = data;
