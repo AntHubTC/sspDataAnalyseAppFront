@@ -41,7 +41,7 @@ const initIntroJs:Function = () => {
         },
         {
             title: '使用说明导航',
-            intro: '工具介绍完毕，让我们开始修复数据吧！',
+            intro: '工具介绍完毕，让我们开始修复数据吧！<br/><br/>开发人员：唐成<br/>工号：XC18377',
             position: 'center',
         }
     ]

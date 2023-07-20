@@ -87,7 +87,7 @@ export default {
             formEl.validate((valid, fields) => {
                 if (!valid) {
                     // console.log('error submit!', fields)
-                    this.checkStatus =  3;
+                    this.checkStatus =  4;
                     return;
                 }
                 testUserConfig(this.formData)

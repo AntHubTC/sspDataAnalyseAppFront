@@ -9,12 +9,28 @@
             </div>
             <template v-if="direction == 'right'">
                 <!-- <div class="node-name">id:{{ dataModel.id }}</div> -->
-                <div class="node-name">sspId:{{ dataModel.data.sspId }}</div>
-                <div class="node-name">name:{{ dataModel.title }}</div>
+                <div class="node-name">name:&nbsp;{{ dataModel.title }}</div>
+                <div class="node-name">sspId:&nbsp;{{ dataModel.data.sspId || "无" }}</div>
             </template>
             <template v-else>
-                <div class="node-name">id:{{ dataModel.id }}</div>
-                <div class="node-name">name:{{ dataModel.title }}</div>
+                <div class="node-name">ID:&nbsp;{{ dataModel.id }}</div>
+                <div class="node-name">名称:&nbsp;{{ dataModel.title || "用户未设置"}}</div>
+                <div class="node-name" v-if="dataModel.depth == 4" >电梯编码:&nbsp;{{ dataModel.data.eleNum }}</div>
+                <!-- 单元冗余信息 -->
+                <div v-if="dataModel.depth == 3" :class="nodeItemAnalyaseClass('premises')"
+                    >楼盘id:&nbsp;{{ dataModel.data.unitPremisesId }}</div>
+                <!-- 电梯冗余信息 -->
+                <div v-if="dataModel.depth == 4" :class="nodeItemAnalyaseClass('build')"
+                    >楼栋id:&nbsp;{{ dataModel.data.eleBuildId }}</div>
+                <div v-if="dataModel.depth == 4" :class="nodeItemAnalyaseClass('premises')"
+                    >楼盘id:&nbsp;{{ dataModel.data.elePremisesId }}</div>
+                <!-- 点位冗余信息 -->
+                <div v-if="dataModel.depth == 5" :class="nodeItemAnalyaseClass('unit')"
+                    >单元id:&nbsp;{{ dataModel.data.pointUnitId }}</div>
+                <div v-if="dataModel.depth == 5" :class="nodeItemAnalyaseClass('build')"
+                    >楼栋id:&nbsp;{{ dataModel.data.pointBuildId }}</div>
+                <div v-if="dataModel.depth == 5" :class="nodeItemAnalyaseClass('premises')"
+                    >楼盘id:&nbsp;{{ dataModel.data.pointPremisesId }}</div>
             </template>
         </div>
     </div>
@@ -71,6 +87,43 @@ export default {
         }
     },
     methods: {
+        // 当前分析当前冗余项的数据是否存在异常
+        nodeItemAnalyaseClass (targetProp:String) {
+            let noIssue = false;
+            if (this.direction == 'left') {
+                // ssp侧
+                if (this.dataModel.depth == 3) {
+                    // 验证单元冗余的楼盘id (单元.楼盘id =？ 楼盘.id)
+                    if (targetProp == 'premises') {
+                        noIssue = this.dataModel.data.unitPremisesId == this.dataModel.parent.parent.id;
+                    }
+                } else if (this.dataModel.depth == 4) {
+                    // 验证电梯冗余的楼盘id (电梯.楼盘id =？ 楼盘.id) && (电梯.楼栋id =？ 楼栋.id)
+                    if (targetProp == 'premises') {
+                        noIssue = this.dataModel.data.elePremisesId == this.dataModel.parent.parent.parent.id;
+                    } else if (targetProp == 'build') {
+                        noIssue = this.dataModel.data.eleBuildId == this.dataModel.parent.parent.id;
+                    }
+                } else if (this.dataModel.depth == 5) {
+                    // 验证点位冗余的楼盘id (点位.楼盘id =？ 楼盘.id) && (点位.楼栋id =？ 楼栋.id) && (点位.单元id =？ 单元.id)
+                    if (targetProp == 'premises') {
+                        noIssue = this.dataModel.data.pointPremisesId == this.dataModel.parent.parent.parent.parent.id;
+                    } else if (targetProp == 'build') {
+                        noIssue = this.dataModel.data.pointBuildId == this.dataModel.parent.parent.parent.id;
+                    } else if (targetProp == 'unit') {
+                        noIssue = this.dataModel.data.pointUnitId == this.dataModel.parent.parent.id;
+                    }
+                }
+            } else {
+                // 融媒侧
+
+            }
+
+            return {
+                "exist-error": !noIssue,
+                "node-name": true
+            }
+        },
         show() {
             this.$emit("toggleShow", true);
         },
@@ -170,6 +223,8 @@ $point-bg-color=#D0E6FC
             background-color: white
             &:hover
                 border: 1px solid black
+        .exist-error
+            color: red
     .premises-item
         background-color: $premises-bg-color
     .build-item

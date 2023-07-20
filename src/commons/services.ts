@@ -2,7 +2,7 @@ import service from "./request"
 
 export const getTreeData = ():Promise<any>=>{
     return service.post("/treeData", {
-        "premisesId": "507465185988968546"
+        "premisesId": "853622"
     });
 }
 
