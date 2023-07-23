@@ -1,8 +1,16 @@
 <template>
     <el-dialog v-model="centerDialogVisible" title="数据图导出" width="30%" center class="export-datagram-dialog">
-        <span>
-            您想导出哪种格式的图呢？这里支持PNG和PDF，请选择你想要导出的格式
-        </span>
+        <div>
+            <div>要导出哪些呢?</div>
+            <div>
+                <el-radio-group v-model="dataRange" class="ml-4">
+                    <el-radio :label="1" size="large">全部</el-radio>
+                    <el-radio :label="2" size="large">SSP部分</el-radio>
+                    <el-radio :label="3" size="large">融媒部分</el-radio>
+                </el-radio-group>
+            </div>
+            <span>您想导出哪种格式的图呢？这里支持PNG和PDF，请选择你想要导出的格式</span>
+        </div>
         <template #footer>
         <span class="dialog-footer">
             <el-button @click="exportPNG">PNG</el-button>
@@ -19,7 +27,8 @@ export default {
     data () {
         return {
             centerDialogVisible: false,
-            loadingInstance: null
+            loadingInstance: null,
+            dataRange: 1 // 默认全部
         }
     },
     computed: {
@@ -47,11 +56,11 @@ export default {
         },
         exportPNG () {
             this.toggleLoading(true)
-            this.$emit('exportPNG');
+            this.$emit('exportPNG', this.dataRange);
         },
         exportPDF () {
             this.toggleLoading(true)
-            this.$emit('exportPDF');
+            this.$emit('exportPDF', this.dataRange);
         }
     },
     mounted() {

@@ -23,10 +23,10 @@
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle" ref="mainWorkSpace">
       <div class="workspace-column-box">
-        <div class="workspace-column left-column"  v-if="leftData">
+        <div class="workspace-column left-column"  v-if="leftData" ref="leftWorkSpace">
           <tree-data-node v-model="leftData" :direction="direction"></tree-data-node>
         </div>
-        <div class="workspace-column right-column" v-if="rightData">
+        <div class="workspace-column right-column" v-if="rightData" ref="rightWorkSpace">
           <tree-data-node v-model="rightData" direction="right"></tree-data-node>
         </div>
       </div>
@@ -405,18 +405,31 @@ export default {
       /**
        * 将屏数据关系图转换到canvas
        */
-      screenToCanvas(callback) {
+      screenToCanvas(this:any, dataRange:number, callback: Function, failCallback: Function) {
         /* 
           经过多次尝试，结果导出结果只有可视区域内容，滚动条外都导出不了，网上找了很久发现是这样的：
             html2canvas截图成功的一个标准就是，外层div的高度跟里面需要截图的内容的高度一致就能完整的截图，（比如
             需要截图的外层div是800的高度有滚动条，里面的需要截图的内容是1800的高度，截图的时候就把1800的高度给需要截图的那个div就能完整截图）
             https://blog.csdn.net/xiakekeali/article/details/126049126
         */
-        const mainWorkSpaceEl = this.$refs.mainWorkSpace as HTMLElement;
         const baseEl = this.$refs.baseEl as HTMLElement;
         const scrollHeight = baseEl.scrollHeight;
         const oriHeight = baseEl.style.height;
         baseEl.style.height = scrollHeight + "px";
+
+        let mainWorkSpaceEl = null;
+        if (dataRange === 1) {
+          mainWorkSpaceEl = this.$refs.mainWorkSpace as HTMLElement;
+        } else if (dataRange === 2) {
+          mainWorkSpaceEl = this.$refs.leftWorkSpace as HTMLElement;
+        } else if (dataRange === 3) {
+          mainWorkSpaceEl = this.$refs.rightWorkSpace as HTMLElement;
+        }
+        if (!mainWorkSpaceEl) {
+          this.$message({message: "未找到要导出的工作空间节点信息,不能进行导出!", type: "error"});
+          failCallback && failCallback();
+          return;
+        }
 
         html2canvas(mainWorkSpaceEl, {
           allowTaint: true,
@@ -437,8 +450,8 @@ export default {
       /**
        * 导出pdf图片
        */
-      async exportPDF(this:{$refs:any, screenToCanvas:Function}) {
-        this.screenToCanvas((canvas:HTMLCanvasElement) => {
+      async exportPDF(this:{$refs:any, screenToCanvas:Function}, dataRange:number) {
+        this.screenToCanvas(dataRange, (canvas:HTMLCanvasElement) => {
             let contentWidth = canvas.width;
             let contentHeight = canvas.height;
             let a4Height = 841.89;
@@ -481,13 +494,13 @@ export default {
             pdf.save('title');
 
             this.$refs.exportDialog.closeDialog();
-          });
+          }, () => this.$refs.exportDialog.closeDialog());
       },
       /**
        * 导出图片
        */
-      async exportPNG (this:{$refs:any, screenToCanvas:Function}) {
-        this.screenToCanvas((canvas:HTMLCanvasElement) => {
+      async exportPNG (this:{$refs:any, screenToCanvas:Function}, dataRange:number) {
+        this.screenToCanvas(dataRange, (canvas:HTMLCanvasElement) => {
           // 创建一个新的图片元素
           var img = new Image();
           img.src = canvas.toDataURL("image/png");
@@ -502,7 +515,7 @@ export default {
           link.remove();
 
           this.$refs.exportDialog.closeDialog();
-        });
+        }, () => this.$refs.exportDialog.closeDialog());
       },
       exportSQL (this:any) {
         this.$refs.showSqlDialog.showSql(this.leftData, this.rightData);
