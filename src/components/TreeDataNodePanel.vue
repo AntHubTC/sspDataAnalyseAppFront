@@ -8,10 +8,18 @@
                 <el-icon v-else @click.prevent="show"><folder-remove/></el-icon>
             </div>
             <template v-if="direction == 'right'">
-                <!-- <div class="node-name">id:{{ dataModel.id }}</div> -->
+                <div class="node-name">id:{{ dataModel.id }}</div>
                 <div class="node-name">名称:&nbsp;{{ dataModel.title }}</div>
                 <div class="node-name">sspId:&nbsp;{{ dataModel.data.sspId || "无" }}</div>
                 <div class="node-name" v-if="dataModel.depth == 4" >电梯编码:&nbsp;{{ dataModel.data.eleNum || '无'}}</div>
+                <!-- 电梯冗余信息 -->
+                <div v-if="dataModel.depth == 4" :class="nodeItemAnalyaseClass('build')"
+                    >楼栋id:&nbsp;{{ dataModel.data.eleBuildId }}</div>
+                <!-- 点位冗余信息 -->
+                <div v-if="dataModel.depth == 5" :class="nodeItemAnalyaseClass('unit')"
+                    >单元id:&nbsp;{{ dataModel.data.pointUnitId }}</div>
+                <div v-if="dataModel.depth == 5" :class="nodeItemAnalyaseClass('build')"
+                    >楼栋id:&nbsp;{{ dataModel.data.pointBuildId }}</div>
             </template>
             <template v-else>
                 <div class="node-name">ID:&nbsp;{{ dataModel.id }}</div>

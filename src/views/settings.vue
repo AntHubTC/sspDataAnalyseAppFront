@@ -94,6 +94,7 @@ export default {
                     .then(() => {
                         setUserConfig(this.formData)
                             .then(() => {
+                                localStorage.setItem("srdUserConfig", JSON.stringify(this.formData));
                                 this.checkStatus =  3;
                             })
                             .catch(() => {
@@ -109,7 +110,12 @@ export default {
     created () {
         getUserConfig()
             .then((data:any) => {
-                this.formData = data;
+                if (data.rmCookie && data.sspCookie) {
+                    this.formData = data;
+                } else {
+                    data = JSON.parse(localStorage.getItem("srdUserConfig"));
+                    this.formData = data;
+                }
             })
     }
 };
