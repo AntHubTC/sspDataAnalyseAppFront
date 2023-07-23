@@ -202,7 +202,6 @@ export default {
             this.$emit('nodeClick', this.dataModel);
         },
         contextmenuHandler (e:MouseEvent) {
-            console.info("123")
             e.preventDefault();
             events.emit("nodeContextMenu", {
                 event: e,

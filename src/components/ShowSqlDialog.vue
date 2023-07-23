@@ -5,7 +5,7 @@
             <div class="sql-content">
                 <pre>{{ sspSqlContent }}</pre>
             </div>
-            <div>融媒部分SQL：</div>
+            <div style="margin-top: 10px;">融媒部分SQL：</div>
             <div class="sql-content">
                 <pre>{{ rmSqlContent }}</pre>
             </div>
@@ -153,6 +153,7 @@ export default {
 .export-datagram-dialog
     display: block
     .sql-content
+        margin-top: 5px
         padding: 8px
         border: 1px solid #979797
         height: 200px;

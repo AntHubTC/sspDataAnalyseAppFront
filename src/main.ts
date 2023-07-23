@@ -3,6 +3,9 @@ import './assets/stylus/variables.styl'
 // import 'element-plus/theme-chalk/index.css'
 import 'element-plus/dist/index.css'; 
 
+import contextmenu from 'vue3-contextmenu'
+import 'vue3-contextmenu/dist/vue3-contextmenu.css'
+
 import service from './commons/request'
 import ElementPlus from 'element-plus'
 import * as Icons from '@element-plus/icons-vue'
@@ -24,9 +27,7 @@ app.provide('$axios', service)
 // import { ref, reactive, inject, onMounted} from "vue";
 // const $axios = inject("$axios");
 
-app.use(createPinia())
-app.use(router)
-app.use(ElementPlus)
+app.use(createPinia()).use(router).use(ElementPlus).use(contextmenu)
 
 // 事件总线 》使用参考：https://blog.csdn.net/qq_52013792/article/details/125803290
 // app.config.globalProperties.$mittBus = mitt() //相当于Vue2中的:Vue.prototype.$bus = bus

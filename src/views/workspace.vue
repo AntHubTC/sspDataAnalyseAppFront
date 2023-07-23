@@ -34,11 +34,19 @@
 
     <export-dialog ref="exportDialog" @exportPNG="exportPNG" @exportPDF="exportPDF"></export-dialog>
     <show-sql-dialog ref="showSqlDialog"></show-sql-dialog>
+    <!-- https://www.npmjs.com/package/vue3-contextmenu -->
+    <context-menu name="context-menu-1">
+      <context-menu-submenu :label="'复制'">
+        <context-menu-item>ID</context-menu-item>
+        <context-menu-item>详细信息</context-menu-item>
+      </context-menu-submenu>
+      <context-menu-item @click="renameDataNode">重命名</context-menu-item>
+    </context-menu>
   </div>
 </template>
 
 <script lang="ts">
-import { getCurrentInstance } from 'vue'
+import { getCurrentInstance, inject } from 'vue'
 import { events } from '../bus'
 import screenfull from 'screenfull'
 import key from 'keymaster'
@@ -507,6 +515,8 @@ export default {
       }
     },
     mounted() {
+      const emitContext = inject('emitContext') as (event: Event, dataId: Record<string, unknown>) => void
+
       key('[', this.zoomOut);
       key(']', this.zoomIn);
       // 没有替换掉浏览器的默认F11
@@ -524,8 +534,10 @@ export default {
       }
       this.$nextTick(execFun)
 
+      
       events.on('nodeContextMenu', (arg:{event:MouseEvent, nodeData:DataNode}) => {
         console.info(arg.nodeData);
+        emitContext(event, { name: 'context-menu-1', id: [1, 2, 3] })
       });
       // const instance:any = getCurrentInstance();
       // if (instance) {
