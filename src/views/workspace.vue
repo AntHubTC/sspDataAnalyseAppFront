@@ -49,7 +49,6 @@ import type { DataNode, DataNodeLevel } from '@/commons/types';
 import { dataNodeLevelItems, DataLevel } from '@/commons/common';
 import { useFixDataTreeStore } from '@/stores/common'
 import { getTreeData } from '@/commons/services';
-import { de } from 'element-plus/es/locale';
 import ExportDialog from '../components/ExportDialog.vue'
 import initIntroJs from './workspaceIntro'
 
@@ -525,6 +524,9 @@ export default {
       }
       this.$nextTick(execFun)
 
+      events.on('nodeContextMenu', (arg:{event:MouseEvent, nodeData:DataNode}) => {
+        console.info(arg.nodeData);
+      });
       // const instance:any = getCurrentInstance();
       // if (instance) {
       //   events.on('nodeToggleShow', (node:DataNode) => {

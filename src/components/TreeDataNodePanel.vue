@@ -1,5 +1,5 @@
 <template>
-    <div class="node-container" :class="nodeContainerDynamicClass">
+    <div class="node-container" :class="nodeContainerDynamicClass" @contextmenu="contextmenuHandler">
         <!-- 必须给拖放区元素添加 dragover.prevent，才能使dragDrop事件正确执行 -->
         <div :id="`node_${dataModel.nodeType}_${dataModel.id}`" class="data-node-item" :class="dataNodeItemDynamicClass"
             draggable="true" @dragstart="dragStart" @dragover="dragover" @drop="drop" @click.prevent="nodeClick">
@@ -50,6 +50,7 @@ import type { PropType } from 'vue'
 import type { DataNode } from '@/commons/types'
 import { useDragStore } from '@/stores/dragStore'
 import { useFixDataTreeStore } from '@/stores/common'
+import { events } from '../bus'; 
 
 export default {
     props: {
@@ -199,6 +200,14 @@ export default {
         nodeClick () {
             // TODO:: 双击查看详情
             this.$emit('nodeClick', this.dataModel);
+        },
+        contextmenuHandler (e:MouseEvent) {
+            console.info("123")
+            e.preventDefault();
+            events.emit("nodeContextMenu", {
+                event: e,
+                nodeData: this.dataModel
+            })
         }
     },
     mounted() {
