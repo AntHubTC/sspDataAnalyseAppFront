@@ -125,7 +125,19 @@ export default {
                 }
             } else {
                 // 融媒侧
-
+                if (this.dataModel.depth == 4) {
+                    // 验证电梯冗余的楼盘id (电梯.楼栋id =？ 楼栋.id)
+                    if (targetProp == 'build') {
+                        noIssue = this.dataModel.data.eleBuildId == this.dataModel.parent.parent.id;
+                    }
+                } else if (this.dataModel.depth == 5) {
+                    // 验证点位冗余的楼盘id (点位.楼栋id =？ 楼栋.id) && (点位.单元id =？ 单元.id)
+                    if (targetProp == 'build') {
+                        noIssue = this.dataModel.data.pointBuildId == this.dataModel.parent.parent.parent.id;
+                    } else if (targetProp == 'unit') {
+                        noIssue = this.dataModel.data.pointUnitId == this.dataModel.parent.parent.id;
+                    }
+                }
             }
 
             return {
@@ -214,6 +226,7 @@ $point-bg-color=#D0E6FC
                 right inherit
     .data-node-item
         min-width: 222px
+        width: 222px
         // border: 1px solid black
         border: 1px solid #959595
         padding: 6px 12px

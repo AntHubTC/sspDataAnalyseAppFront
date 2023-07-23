@@ -29,6 +29,7 @@ declare module 'vue' {
     ExportDialog: typeof import('./src/components/ExportDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ShowSqlDialog: typeof import('./src/components/ShowSqlDialog.vue')['default']
     TreeDataNode: typeof import('./src/components/TreeDataNode.vue')['default']
     TreeDataNodePanel: typeof import('./src/components/TreeDataNodePanel.vue')['default']
   }

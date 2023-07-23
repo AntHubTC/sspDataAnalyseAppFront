@@ -10,6 +10,7 @@
       </div>
       <div class="tool-box">
         <el-button-group>
+          <el-button type="primary" @click.prevent="exportSQL"><i class="el-icon"><el-icon-download></el-icon-download></i>SQL</el-button>
           <el-button type="primary" @click.prevent="exportDiagram"><i class="el-icon"><el-icon-download></el-icon-download></i>PNG</el-button>
           <el-button type="primary" @click.prevent="toggleFullScreen"><i class="el-icon"><el-icon-plus></el-icon-plus></i>全屏</el-button>
           <el-button type="primary" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i>放大</el-button>
@@ -32,6 +33,7 @@
     </div>
 
     <export-dialog ref="exportDialog" @exportPNG="exportPNG" @exportPDF="exportPDF"></export-dialog>
+    <show-sql-dialog ref="showSqlDialog"></show-sql-dialog>
   </div>
 </template>
 
@@ -494,6 +496,9 @@ export default {
 
           this.$refs.exportDialog.closeDialog();
         });
+      },
+      exportSQL (this:any) {
+        this.$refs.showSqlDialog.showSql(this.leftData, this.rightData);
       },
       /**
        * 帮助按钮
