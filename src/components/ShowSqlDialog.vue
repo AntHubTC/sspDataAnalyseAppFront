@@ -1,11 +1,21 @@
 <template>
     <el-dialog v-model="centerDialogVisible" title="最终关系SQL语句生成" center class="export-datagram-dialog">
         <div>
-            <div>SSP部分SQL：</div>
+            <div>
+                SSP部分SQL： 
+                <el-tooltip class="box-item" effect="dark" content="这个按钮用于复制SSP的SQL" placement="right" >
+                    <el-button size="small" icon="CopyDocument" @click="copySql('#copySspSqlBtn', sspSqlContent)" id="copySspSqlBtn"/>
+                </el-tooltip>
+            </div>
             <div class="sql-content">
                 <pre>{{ sspSqlContent }}</pre>
             </div>
-            <div style="margin-top: 10px;">融媒部分SQL：</div>
+            <div style="margin-top: 10px;">
+                融媒部分SQL：
+                <el-tooltip class="box-item" effect="dark" content="这个按钮用于复制融媒的SQL" placement="right" >
+                    <el-button size="small" icon="CopyDocument" @click="copySql('#copyRmSqlBtn', rmSqlContent)" id="copyRmSqlBtn"/>
+                </el-tooltip>
+            </div>
             <div class="sql-content">
                 <pre>{{ rmSqlContent }}</pre>
             </div>
@@ -20,11 +30,14 @@
 
 <script lang="ts">
 import { ElLoading, ElMessage } from 'element-plus';
-
+import clipboard from 'clipboard'
 
 import type { DataNode } from '@/commons/types';
 
 export default {
+    components: {
+        clipboard
+    },
     data () {
         return {
             centerDialogVisible: false,
@@ -36,6 +49,25 @@ export default {
     computed: {
     },
     methods: {
+        copySql(this:any, btnSelector: string, sql: string) {
+            // 创建出来的的剪贴板对象,通过id来创建剪贴对象，也可以通过class来获取剪贴对象
+            let clipboardBean = new clipboard(btnSelector, {
+                text: function (trigger) {
+                    // 返回的就是复制的内容，可以在返回前面对数据进行增强等...
+                    return sql;
+                }
+            });
+            clipboardBean.on('success', (e) => {
+                this.$message({message:"复制成功", type: "success"})
+                // 复制完成后销毁clipboard对象，预防下一次调用会多次提示
+                clipboardBean.destroy()
+            });
+            clipboardBean.on('error', (e) => {
+                this.$message({message:"复制失败", type: "error"})
+                // 复制完成后销毁clipboard对象，预防下一次调用会多次提示
+                clipboardBean.destroy()
+            });
+        },
         /**
          * 递归树节点数据执行excFun函数执行操作
          * 
