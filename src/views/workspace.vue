@@ -41,10 +41,11 @@
     <!-- https://www.npmjs.com/package/vue3-contextmenu -->
     <context-menu name="context-menu-1">
       <context-menu-submenu :label="'复制'">
-        <context-menu-item>ID</context-menu-item>
-        <context-menu-item>详细信息</context-menu-item>
+        <context-menu-item @itemClickHandle="copyId">ID</context-menu-item>
+        <context-menu-item @itemClickHandle="copyTitle">名称</context-menu-item>
+        <context-menu-item @itemClickHandle="copyDetail">详细信息</context-menu-item>
       </context-menu-submenu>
-      <context-menu-item @click="renameDataNode">重命名</context-menu-item>
+      <context-menu-item @itemClickHandle="renameDataNode">重命名</context-menu-item>
     </context-menu>
   </div>
 </template>
@@ -56,6 +57,7 @@ import screenfull from 'screenfull'
 import key from 'keymaster'
 import JsPDF from 'jspdf'
 import html2canvas from 'html2canvas';
+import ClipboardJS from 'clipboard'
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode, DataNodeLevel } from '@/commons/types';
 import { dataNodeLevelItems, DataLevel } from '@/commons/common';
@@ -63,7 +65,6 @@ import { useFixDataTreeStore } from '@/stores/common'
 import { getTreeData } from '@/commons/services';
 import ExportDialog from '../components/ExportDialog.vue'
 import initIntroJs from './workspaceIntro'
-
 
 interface LineConnectParams extends ConnectParams {
   /**
@@ -374,37 +375,37 @@ export default {
        * 绘制线条
        */
       drawLines() {
-        this.$nextTick().then(() => {
-          // 连线之前先把连线的关系清除
-          this.jsPlumbInstance.reset();
-          // 给每个节点添加锚点
-          let addEndpoint:Function = (node:DataNode) => {
-            if (this.isNodeHide(node)) {
-              // 如果节点已经隐藏了就不需要添加锚点了
-              return;
-            }
-            let id = `node_${node.nodeType}_${node.id}`;
-            // this.jsPlumbInstance.draggable(id);
-            this.jsPlumbInstance.addEndpoint(id, {
-                // anchor: ['Bottom', 'Top', 'Left', 'Right'],
-                anchor: ['Left', 'Right'],
-                overlays: [
-                  ['Arrow', { width: 10, length: 8, location: 1, direction: 1, foldback: 0.623 }]
-                ],
-                maxConnections: -1
-              }, this.commonLink)
-          }
-          this.recursionTreeDataFun(this.leftData, (parentNode:DataNode, childNode:DataNode) => {
-            addEndpoint(childNode);
-          });
-          // 开始节点间的连线
-          this.lineList.forEach((item:LineConnectParams) => {
-            let connection:Connection = this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
-            item.sourceDataNode.connectionLines = [connection];
-          });
-          // 重绘
-          this.jsPlumbInstance.repaintEverything();
-        });
+        // this.$nextTick().then(() => {
+        //   // 连线之前先把连线的关系清除
+        //   this.jsPlumbInstance.reset();
+        //   // 给每个节点添加锚点
+        //   let addEndpoint:Function = (node:DataNode) => {
+        //     if (this.isNodeHide(node)) {
+        //       // 如果节点已经隐藏了就不需要添加锚点了
+        //       return;
+        //     }
+        //     let id = `node_${node.nodeType}_${node.id}`;
+        //     // this.jsPlumbInstance.draggable(id);
+        //     this.jsPlumbInstance.addEndpoint(id, {
+        //         // anchor: ['Bottom', 'Top', 'Left', 'Right'],
+        //         anchor: ['Left', 'Right'],
+        //         overlays: [
+        //           ['Arrow', { width: 10, length: 8, location: 1, direction: 1, foldback: 0.623 }]
+        //         ],
+        //         maxConnections: -1
+        //       }, this.commonLink)
+        //   }
+        //   this.recursionTreeDataFun(this.leftData, (parentNode:DataNode, childNode:DataNode) => {
+        //     addEndpoint(childNode);
+        //   });
+        //   // 开始节点间的连线
+        //   this.lineList.forEach((item:LineConnectParams) => {
+        //     let connection:Connection = this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
+        //     item.sourceDataNode.connectionLines = [connection];
+        //   });
+        //   // 重绘
+        //   this.jsPlumbInstance.repaintEverything();
+        // });
       },
       /**
        * 数据节点层级项被点击
@@ -426,14 +427,15 @@ export default {
        */
       isAllNodeLoaded() {
         let loadObj = { isLoaded: true }
-        loadObj.isLoaded = loadObj.isLoaded && !!this.leftData.loadStatus;
-        loadObj.isLoaded = loadObj.isLoaded && !!this.rightData.loadStatus;
         let execFun = (parentNode:DataNode, childNode:DataNode) => {
           loadObj.isLoaded = loadObj.isLoaded && !!childNode.loadStatus;
         }
-        this.recursionTreeDataFun(this.leftData, execFun);
-        this.recursionTreeDataFun(this.rightData, execFun);
-
+        for (let stageDataItem of this.data) {
+          loadObj.isLoaded = loadObj.isLoaded && !!stageDataItem.leftData.loadStatus;
+          loadObj.isLoaded = loadObj.isLoaded && !!stageDataItem.rightData.loadStatus;
+          this.recursionTreeDataFun(stageDataItem.leftData, execFun);
+          this.recursionTreeDataFun(stageDataItem.rightData, execFun);
+        }
         return loadObj.isLoaded
       },
       /**
@@ -572,10 +574,22 @@ export default {
       changePremisesId (premisesId:string) {
         this.premisesIds = premisesId.split(",");
         this.init();
+      },
+      copyId (this:any, e:any) {
+        ClipboardJS.copy(e.nodeData.id);
+        this.$message({ message: "拷贝成功", type: "success" });
+      },
+      copyTitle (this:any, e:any) {
+        ClipboardJS.copy(e.nodeData.title);
+        this.$message({ message: "拷贝成功", type: "success" });
+      },
+      copyDetail (this:any, e:any) {
+        ClipboardJS.copy(e.currentNodeTarget.innerText);
+        this.$message({ message: "拷贝成功", type: "success" });
       }
     },
     mounted() {
-      const emitContext = inject('emitContext') as (event: Event, dataId: Record<string, unknown>) => void
+      const emitContext = inject('emitContext') as (event: Event, dataNodeData: Record<string, unknown>) => void
 
       key('[', this.zoomOut);
       key(']', this.zoomIn);
@@ -594,10 +608,9 @@ export default {
       }
       this.$nextTick(execFun)
 
-      
-      events.on('nodeContextMenu', (arg:{event:MouseEvent, nodeData:DataNode}) => {
-        console.info(arg.nodeData);
-        emitContext(event, { name: 'context-menu-1', id: [1, 2, 3] })
+      events.on('nodeContextMenu', (arg:{event:any, nodeData:DataNode}) => {
+        debugger
+        emitContext(event, { name: 'context-menu-1', nodeData: arg.nodeData, currentNodeTarget: event.currentTarget })
       });
       // const instance:any = getCurrentInstance();
       // if (instance) {
