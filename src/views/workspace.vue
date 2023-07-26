@@ -40,7 +40,7 @@
     <setting-premises-dialog ref="settingPremisesDialog" @settingPremisesId="changePremisesId"></setting-premises-dialog>
     <!-- https://www.npmjs.com/package/vue3-contextmenu -->
     <context-menu name="context-menu-1">
-      <context-menu-submenu :label="'复制'">
+      <context-menu-submenu :label="'复制'" v-if="isSupportClipboard">
         <context-menu-item @itemClickHandle="copyId">ID</context-menu-item>
         <context-menu-item @itemClickHandle="copyTitle">名称</context-menu-item>
         <context-menu-item @itemClickHandle="copyDetail">详细信息</context-menu-item>
@@ -211,6 +211,9 @@ export default {
         }
     },
     computed: {
+      isSupportClipboard () {
+        return ClipboardJS.isSupported();
+      },
       mainWorkspaceStyle() {
         return {
           "transform": `scale(${this.scale})`,
