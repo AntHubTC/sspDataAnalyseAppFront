@@ -23,14 +23,16 @@
       </div>
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle" ref="mainWorkSpace">
-      <div class="workspace-column-box" v-loading="loading"> <!--  v-loading="loading" -->
-        <div class="workspace-column left-column"  v-if="leftData" ref="leftWorkSpace">
-          <tree-data-node v-model="leftData" :direction="direction"></tree-data-node>
+      <template v-for="(stageDataItem, index) in data" :key="`stage_${index}`">
+        <div class="workspace-column-box" v-loading="loading">
+          <div class="workspace-column left-column"  v-if="stageDataItem.leftData" ref="leftWorkSpace">
+            <tree-data-node v-model="stageDataItem.leftData" :direction="direction"></tree-data-node>
+          </div>
+          <div class="workspace-column right-column" v-if="stageDataItem.rightData" ref="rightWorkSpace">
+            <tree-data-node v-model="stageDataItem.rightData" direction="right"></tree-data-node>
+          </div>
         </div>
-        <div class="workspace-column right-column" v-if="rightData" ref="rightWorkSpace">
-          <tree-data-node v-model="rightData" direction="right"></tree-data-node>
-        </div>
-      </div>
+      </template>
     </div>
 
     <export-dialog ref="exportDialog" @exportPNG="exportPNG" @exportPDF="exportPDF"></export-dialog>
@@ -74,6 +76,17 @@ interface LineConnectParams extends ConnectParams {
   targetDataNode: DataNode
 }
 
+interface StageData {
+      /**
+     * 左树数据
+     */
+     leftData: DataNode | null,
+    /**
+     * 右树数据
+     */
+    rightData: DataNode | null,
+}
+
 /**
  * 组件数据模型
  */
@@ -81,19 +94,15 @@ interface ComponentData {
   /**
    * 当前楼盘id
    */
-  premisesId: string,
+   premisesIds: string[],
   /**
    * 树节点朝向 left左 right右
    */
   direction: string,
   /**
-   * 左树数据
+   * 舞台数据
    */
-  leftData: DataNode | null,
-  /**
-   * 右树数据
-   */
-  rightData: DataNode | null,
+  data: StageData[],
   /**
    * 连线
    */
@@ -174,9 +183,8 @@ export default {
 
         return {
             loading: true,
-            premisesId: "593168",
-            leftData: null,
-            rightData: null,
+            premisesIds: ["593168", "593563"],
+            data: [],
             lineList: null,
             direction: 'left',
             scale: 0.8,
@@ -218,31 +226,39 @@ export default {
     methods: {
       init ():void {
         this.loading = true;
-        getTreeData(this.premisesId).then((res: { right: any; left: any; }) => {
-          this.leftData = res.left;
-          this.rightData = res.right;
-          // 数据初始转换
-          this.dataInitConvert(this.leftData);
-          this.dataInitConvert(this.rightData);
-          this.loading = false;
-        })
+        this.data = [];
+        for (let premisesId of this.premisesIds) {
+          getTreeData(premisesId).then((res: { right: DataNode, left: DataNode }) => {
+            let leftData:DataNode = res.left;
+            let rightData:DataNode = res.right;
+            this.data.push({ leftData, rightData });
+            // 数据初始转换
+            this.dataInitConvert(leftData, "leftGroup");
+            this.dataInitConvert(rightData, "rightGroup");
+            this.loading = false;
+          })
+        }
       },
       /**
        * 数据基础初始化
        * 
        * @param dataNode 树节点
        */
-      dataInitConvert(dataNode:DataNode):DataNode {
+      dataInitConvert(dataNode:DataNode, group:string):DataNode {
         if (null == dataNode) {
           return;
         }
-        dataNode.group = "group_" + dataNode.id;
+        dataNode.group = group || ("group_" + dataNode.id);
         dataNode.depth = 1;
-        // 为子节点设置父节点parent，方便后续子节点访问父节点
+
+        const currentShowLevel = useFixDataTreeStore().getCurrentLevel();
         this.recursionTreeDataFun(dataNode, (parentNode:DataNode, childNode:DataNode) => {
+          // 为子节点设置父节点parent，方便后续子节点访问父节点
           childNode.parent = parentNode;
           childNode.group = parentNode.group;
           childNode.depth = parentNode.depth + 1;
+          // 显示层级初始化
+          parentNode.hideChild = currentShowLevel < parentNode.depth + 1;
         });
 
         return dataNode;
@@ -335,8 +351,10 @@ export default {
             recursionFun(cnode);
           }
         }
-        recursionFun(this.leftData);
-        recursionFun(this.rightData);
+        for (let stageDataItem of this.data) {
+          recursionFun(stageDataItem.leftData);
+          recursionFun(stageDataItem.rightData);
+        }
       },
       /**
        * 当前节点是否隐藏？
@@ -398,8 +416,10 @@ export default {
           // parentNode.hideChild = dataNodeLevelItem.level - 1 < DataLevel[parentNode.nodeType];
           parentNode.hideChild = dataNodeLevelItem.level < parentNode.depth + 1;
         }
-        this.recursionTreeDataFun(this.leftData, execFun);
-        this.recursionTreeDataFun(this.rightData, execFun);
+        for (let stageDataItem of this.data) {
+          this.recursionTreeDataFun(stageDataItem.leftData, execFun);
+          this.recursionTreeDataFun(stageDataItem.rightData, execFun);
+        }
       },
       /**
        * 所有数据节点是否都已经加载完毕
@@ -445,18 +465,21 @@ export default {
           return;
         }
 
-        html2canvas(mainWorkSpaceEl, {
-          allowTaint: true,
-          useCORS: false, // 如果导出内容涉及到跨域资源（如图片），需要设置为true
-          logging: false,
-          height: baseEl.scrollHeight,
-          width: baseEl.scrollWidth,
-          scale: 2,
-          y: 20
-        }).then(function(canvas) {
-          baseEl.style.height = oriHeight;
-          callback && callback(canvas);
-        });
+        let mainWorkSpaceElList = mainWorkSpaceEl instanceof Array ? mainWorkSpaceEl : [mainWorkSpaceEl];
+        for (let elementEl of mainWorkSpaceElList) {
+          html2canvas(elementEl, {
+            allowTaint: true,
+            useCORS: false, // 如果导出内容涉及到跨域资源（如图片），需要设置为true
+            logging: false,
+            height: baseEl.scrollHeight,
+            width: baseEl.scrollWidth,
+            scale: 2,
+            y: 20
+          }).then(function(canvas) {
+            baseEl.style.height = oriHeight;
+            callback && callback(canvas);
+          });
+        }
       },
       exportDiagram (this:{$refs:any}) {
         this.$refs.exportDialog.openDialog();
@@ -532,7 +555,7 @@ export default {
         }, () => this.$refs.exportDialog.closeDialog());
       },
       exportSQL (this:any) {
-        this.$refs.showSqlDialog.showSql(this.leftData, this.rightData);
+        this.$refs.showSqlDialog.showSql(this.data);
       },
       /**
        * 帮助按钮
@@ -547,7 +570,7 @@ export default {
         this.$refs.settingPremisesDialog.openDialog();
       },
       changePremisesId (premisesId:string) {
-        this.premisesId = premisesId;
+        this.premisesIds = premisesId.split(",");
         this.init();
       }
     },

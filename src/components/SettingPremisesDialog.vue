@@ -1,7 +1,7 @@
 <template>
     <el-dialog v-model="centerDialogVisible" title="楼盘id设置" width="20%" center class="set-premisesId-dialog">
         <div>
-            <span>楼盘id:</span>
+            <span>楼盘id(多个用逗号分割):</span>
             <div>
                 <el-input v-model="premisesId" placeholder="请填写正确的楼盘id" clearable/>
             </div>
@@ -19,7 +19,7 @@ export default {
     data () {
         return {
             centerDialogVisible: false,
-            premisesId: 593563
+            premisesId: "593563"
         }
     },
     computed: {

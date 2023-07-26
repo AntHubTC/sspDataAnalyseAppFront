@@ -97,59 +97,62 @@ export default {
 
             return "-- " + paths.reverse().join(" / ") + "\r\n";
         },
-        showSql(leftData: DataNode, rightData: DataNode) {
+        showSql(stageData:any[]) {
+            debugger
             this.sspSqlContent = "";
             this.rmSqlContent = "";
             this.openDialog();
             // this.toggleLoading(true);
 
             this.$nextTick(() => {
-                // 生成ssp的sql
                 let finalSSPSQL = "use ssp3;\r\n";
-                this.recursionTreeDataFun(leftData, (parentNode:DataNode, childNode:DataNode) => {
-                    if (childNode.depth === 2) {
-                        // 楼栋
-                        finalSSPSQL += this.getNodePath(childNode);
-                        finalSSPSQL += `update \`ssp3\`.\`build\` set premises_id = ${parentNode.id}`;
-                    } else if (childNode.depth === 3) {
-                        // 单元
-                        finalSSPSQL += this.getNodePath(childNode);
-                        finalSSPSQL += `update \`ssp3\`.\`unit\` set premises_id = ${parentNode.parent.id}, build_id=${parentNode.id}`;
-                    } else if (childNode.depth === 4) {
-                        // 电梯
-                        finalSSPSQL += this.getNodePath(childNode);
-                        finalSSPSQL += `update \`ssp3\`.\`elevator\` set premises_id = ${parentNode.parent.parent.id}, build_id=${parentNode.parent.id}, unit_id=${parentNode.id}`;
-                    } else if (childNode.depth === 5) {
-                        // 点位
-                        finalSSPSQL += this.getNodePath(childNode);
-                        finalSSPSQL += `update \`ssp3\`.\`point\` set premises_id = ${parentNode.parent.parent.parent.id}, build_id=${parentNode.parent.parent.id}, unit_id=${parentNode.parent.id}, ele_id=${parentNode.id}`;
-                    }
-                    finalSSPSQL += ` where id=${childNode.id};\r\n`;
-                });
-                this.sspSqlContent = finalSSPSQL;
-
-                // 生成融媒的sql
                 let finalRmSQL = "use common-crm;\r\n";
-                this.recursionTreeDataFun(rightData, (parentNode:DataNode, childNode:DataNode) => {
-                    if (childNode.depth === 2) {
-                        // 楼栋
-                        finalRmSQL += this.getNodePath(childNode);
-                        finalRmSQL += `update \`common-crm\`.\`resource_building\` set project_id = "${parentNode.id}"`;
-                    } else if (childNode.depth === 3) {
-                        // 单元
-                        finalRmSQL += this.getNodePath(childNode);
-                        finalRmSQL += `update \`common-crm\`.\`resource_unit\` set building_id="${parentNode.id}"`;
-                    } else if (childNode.depth === 4) {
-                        // 电梯
-                        finalRmSQL += this.getNodePath(childNode);
-                        finalRmSQL += `update \`common-crm\`.\`resource_elevator\` set building_id="${parentNode.parent.id}", unit_id="${parentNode.id}"`;
-                    } else if (childNode.depth === 5) {
-                        // 点位
-                        finalRmSQL += this.getNodePath(childNode);
-                        finalRmSQL += `update \`common-crm\`.\`resource_media\` set building_id="${parentNode.parent.parent.id}", unit_id="${parentNode.parent.id}", elevator_id="${parentNode.id}"`;
-                    }
-                    finalRmSQL += ` where id="${childNode.id}";\r\n`;
-                });
+                for (let stageDataItem of stageData) {
+                    // 生成ssp的sql
+                    this.recursionTreeDataFun(stageDataItem.leftData, (parentNode:DataNode, childNode:DataNode) => {
+                        if (childNode.depth === 2) {
+                            // 楼栋
+                            finalSSPSQL += this.getNodePath(childNode);
+                            finalSSPSQL += `update \`ssp3\`.\`build\` set premises_id = ${parentNode.id}`;
+                        } else if (childNode.depth === 3) {
+                            // 单元
+                            finalSSPSQL += this.getNodePath(childNode);
+                            finalSSPSQL += `update \`ssp3\`.\`unit\` set premises_id = ${parentNode.parent.id}, build_id=${parentNode.id}`;
+                        } else if (childNode.depth === 4) {
+                            // 电梯
+                            finalSSPSQL += this.getNodePath(childNode);
+                            finalSSPSQL += `update \`ssp3\`.\`elevator\` set premises_id = ${parentNode.parent.parent.id}, build_id=${parentNode.parent.id}, unit_id=${parentNode.id}`;
+                        } else if (childNode.depth === 5) {
+                            // 点位
+                            finalSSPSQL += this.getNodePath(childNode);
+                            finalSSPSQL += `update \`ssp3\`.\`point\` set premises_id = ${parentNode.parent.parent.parent.id}, build_id=${parentNode.parent.parent.id}, unit_id=${parentNode.parent.id}, ele_id=${parentNode.id}`;
+                        }
+                        finalSSPSQL += ` where id=${childNode.id};\r\n`;
+                        });
+                    // 生成融媒的sql
+                    this.recursionTreeDataFun(stageDataItem.rightData, (parentNode:DataNode, childNode:DataNode) => {
+                        if (childNode.depth === 2) {
+                            // 楼栋
+                            finalRmSQL += this.getNodePath(childNode);
+                            finalRmSQL += `update \`common-crm\`.\`resource_building\` set project_id = "${parentNode.id}"`;
+                        } else if (childNode.depth === 3) {
+                            // 单元
+                            finalRmSQL += this.getNodePath(childNode);
+                            finalRmSQL += `update \`common-crm\`.\`resource_unit\` set building_id="${parentNode.id}"`;
+                        } else if (childNode.depth === 4) {
+                            // 电梯
+                            finalRmSQL += this.getNodePath(childNode);
+                            finalRmSQL += `update \`common-crm\`.\`resource_elevator\` set building_id="${parentNode.parent.id}", unit_id="${parentNode.id}"`;
+                        } else if (childNode.depth === 5) {
+                            // 点位
+                            finalRmSQL += this.getNodePath(childNode);
+                            finalRmSQL += `update \`common-crm\`.\`resource_media\` set building_id="${parentNode.parent.parent.id}", unit_id="${parentNode.parent.id}", elevator_id="${parentNode.id}"`;
+                        }
+                        finalRmSQL += ` where id="${childNode.id}";\r\n`;
+                    });
+
+                }
+                this.sspSqlContent = finalSSPSQL;
                 this.rmSqlContent = finalRmSQL;
                 
                 // this.toggleLoading(false);
