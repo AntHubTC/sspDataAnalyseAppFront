@@ -10,6 +10,7 @@
       </div>
       <div class="tool-box">
         <el-button-group>
+          <el-button type="primary" @click.prevent="changePremises"><i class="el-icon"><el-icon-download></el-icon-download></i>切换楼盘</el-button>
           <el-button type="primary" @click.prevent="exportSQL"><i class="el-icon"><el-icon-download></el-icon-download></i>SQL</el-button>
           <el-button type="primary" @click.prevent="exportDiagram"><i class="el-icon"><el-icon-download></el-icon-download></i>PNG</el-button>
           <el-button type="primary" @click.prevent="toggleFullScreen"><i class="el-icon"><el-icon-plus></el-icon-plus></i>全屏</el-button>
@@ -22,7 +23,7 @@
       </div>
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle" ref="mainWorkSpace">
-      <div class="workspace-column-box">
+      <div class="workspace-column-box" v-loading="loading"> <!--  v-loading="loading" -->
         <div class="workspace-column left-column"  v-if="leftData" ref="leftWorkSpace">
           <tree-data-node v-model="leftData" :direction="direction"></tree-data-node>
         </div>
@@ -34,6 +35,7 @@
 
     <export-dialog ref="exportDialog" @exportPNG="exportPNG" @exportPDF="exportPDF"></export-dialog>
     <show-sql-dialog ref="showSqlDialog"></show-sql-dialog>
+    <setting-premises-dialog ref="settingPremisesDialog" @settingPremisesId="changePremisesId"></setting-premises-dialog>
     <!-- https://www.npmjs.com/package/vue3-contextmenu -->
     <context-menu name="context-menu-1">
       <context-menu-submenu :label="'复制'">
@@ -77,6 +79,10 @@ interface LineConnectParams extends ConnectParams {
  */
 interface ComponentData {
   /**
+   * 当前楼盘id
+   */
+  premisesId: string,
+  /**
    * 树节点朝向 left左 right右
    */
   direction: string,
@@ -111,7 +117,11 @@ interface ComponentData {
   /**
    * 数据节点层级
    */
-  dataNodeLevelItems: DataNodeLevel[]
+  dataNodeLevelItems: DataNodeLevel[],
+  /**
+   * 加载状态
+   */
+  loading: boolean
 }
 
 export default {
@@ -163,6 +173,8 @@ export default {
         jsPlumbInstance.setZoom(0.8);
 
         return {
+            loading: true,
+            premisesId: "593168",
             leftData: null,
             rightData: null,
             lineList: null,
@@ -205,12 +217,14 @@ export default {
     },
     methods: {
       init ():void {
-        getTreeData().then((res: { right: any; left: any; }) => {
+        this.loading = true;
+        getTreeData(this.premisesId).then((res: { right: any; left: any; }) => {
           this.leftData = res.left;
           this.rightData = res.right;
           // 数据初始转换
           this.dataInitConvert(this.leftData);
           this.dataInitConvert(this.rightData);
+          this.loading = false;
         })
       },
       /**
@@ -279,10 +293,10 @@ export default {
       /**
        * 切换全屏模式
        */
-      toggleFullScreen() {
+      toggleFullScreen(this:any) {
             // 如果不允许进入全屏，发出不允许提示（为了优化用）
             if (!screenfull.isEnabled) {
-              this.$message("您的浏览器不能全屏");
+              this.$message({message: "您的浏览器不能全屏!", type: "error"});
               return false;
             }
             screenfull.toggle();
@@ -525,6 +539,16 @@ export default {
        */
       help () {
         initIntroJs();
+      },
+      renameDataNode () {
+        alert("功能开发中，敬请期待！");
+      },
+      changePremises (this:any) {
+        this.$refs.settingPremisesDialog.openDialog();
+      },
+      changePremisesId (premisesId:string) {
+        this.premisesId = premisesId;
+        this.init();
       }
     },
     mounted() {

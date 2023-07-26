@@ -1,8 +1,8 @@
 import service from "./request"
 
-export const getTreeData = ():Promise<any>=>{
+export const getTreeData = (premisesId: string):Promise<any>=>{
     return service.post("/treeData", {
-        "premisesId": "853622"
+        "premisesId": premisesId
     });
 }
 
@@ -20,7 +20,7 @@ export const getUserConfig = ():Promise<any>=>{
  * @returns 
  */
 export const testUserConfig = (userConfig:any):Promise<any>=>{
-    return service.post("/setUserConfig", userConfig);
+    return service.post("/testConfig", userConfig);
 }
 
 /**
@@ -29,7 +29,7 @@ export const testUserConfig = (userConfig:any):Promise<any>=>{
  * @returns 
  */
 export const setUserConfig = (userConfig:any):Promise<any>=>{
-    return service.post("/testConfig", userConfig);
+    return service.post("/setUserConfig", userConfig);
 }
 
 // todo:: 引入mockjs来进行接口数据模拟

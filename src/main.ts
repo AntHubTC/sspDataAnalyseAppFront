@@ -15,13 +15,13 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import mitt from 'mitt'
-import * as directives from './tool/directives';
+// import * as directives from './tool/directives';
 
 const app = createApp(App)
 // 循环注册指令
-Object.keys(directives).forEach(key => {
-    app.directive(key, (directives as { [key: string ]: Directive })[key]);
-});
+// Object.keys(directives).forEach(key => {
+//     app.directive(key, (directives as { [key: string ]: Directive })[key]);
+// });
 // axios
 app.provide('$axios', service)
 // import { ref, reactive, inject, onMounted} from "vue";

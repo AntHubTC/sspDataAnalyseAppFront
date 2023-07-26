@@ -24,7 +24,9 @@
             <template v-else>
                 <div class="node-name">ID:&nbsp;{{ dataModel.id }}</div>
                 <div class="node-name">名称:&nbsp;{{ dataModel.title || "用户未设置"}}</div>
+                <div class="node-name" v-if="dataModel.depth == 5">终端类型:&nbsp;{{ dataModel.data.type == '1' ? "屏" : "框"}}</div>
                 <div class="node-name" v-if="dataModel.depth == 4" >电梯编码:&nbsp;{{ dataModel.data.eleNum || '无'}}</div>
+                <br v-if="dataModel.depth == 1 || dataModel.depth == 2"/>
                 <!-- 单元冗余信息 -->
                 <div v-if="dataModel.depth == 3" :class="nodeItemAnalyaseClass('premises')"
                     >楼盘id:&nbsp;{{ dataModel.data.unitPremisesId }}</div>

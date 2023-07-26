@@ -113,8 +113,11 @@ export default {
                 if (data.rmCookie && data.sspCookie) {
                     this.formData = data;
                 } else {
-                    data = JSON.parse(localStorage.getItem("srdUserConfig"));
-                    this.formData = data;
+                    let srdUserConfig = localStorage.getItem("srdUserConfig")
+                    if (srdUserConfig) {
+                        data = JSON.parse(localStorage.getItem("srdUserConfig"));
+                        this.formData = data;
+                    }
                 }
             })
     }

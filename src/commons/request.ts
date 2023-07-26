@@ -2,6 +2,8 @@ import { ElMessage } from 'element-plus'
 import axios, { type AxiosInstance } from 'axios'
 
 const service:AxiosInstance = axios.create({
+    // 打包到springboot使用/
+    //baseURL:'/',
     baseURL:'/api',
     timeout: 10000
 })
