@@ -235,18 +235,37 @@ export default {
     methods: {
       init ():void {
         this.loading = true;
+        // 加载初始化树节点信息
+        const getTreeDataTasks:Promise<any>[] = this.loadPremisesTreeNodeData();
+        // 树节点加载成功后，开始计算出所有的线条信息
+        Promise.all(getTreeDataTasks).then(() => {
+          this.initLines();
+          this.loading = false;
+        });
+      },
+      /**
+       * 初始化所有线条信息
+       */
+      initLines () {
+        for (let stageDataItem of this.data) {
+
+        }
+      },
+      loadPremisesTreeNodeData ():Promise<any>[] {
         this.data = [];
+        // 加载初始化树节点信息
+        let getTreeDataTasks:Promise<any>[] = [];
         for (let premisesId of this.premisesIds) {
-          getTreeData(premisesId).then((res: { right: DataNode, left: DataNode }) => {
+          getTreeDataTasks.push(getTreeData(premisesId).then((res: { right: DataNode, left: DataNode }) => {
             let leftData:DataNode = res.left;
             let rightData:DataNode = res.right;
             this.data.push({ leftData, rightData });
             // 数据初始转换
             this.dataInitConvert(leftData, "leftGroup");
             this.dataInitConvert(rightData, "rightGroup");
-            this.loading = false;
-          })
+          }));
         }
+        return getTreeDataTasks;
       },
       /**
        * 数据基础初始化
