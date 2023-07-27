@@ -8,19 +8,10 @@
             @click="dataNodeLevelItemClick(dataNodeLevelItem)"><i class="el-icon"><el-icon-right></el-icon-right></i>{{dataNodeLevelItem.levelCnName }}</el-button>
         </el-button-group>
       </div>
-      <div class="tool-box">
-        <el-button-group>
-          <el-button type="primary" @click.prevent="changePremises"><i class="el-icon"><el-icon-download></el-icon-download></i>切换楼盘</el-button>
-          <el-button type="primary" @click.prevent="exportSQL"><i class="el-icon"><el-icon-download></el-icon-download></i>SQL</el-button>
-          <el-button type="primary" @click.prevent="exportDiagram"><i class="el-icon"><el-icon-download></el-icon-download></i>PNG</el-button>
-          <el-button type="primary" @click.prevent="toggleFullScreen"><i class="el-icon"><el-icon-plus></el-icon-plus></i>全屏</el-button>
-          <el-button type="primary" @click.prevent="zoomIn"><i class="el-icon"><el-icon-plus></el-icon-plus></i>放大</el-button>
-          <el-button type="primary" @click.prevent="zoomOut"><i class="el-icon"><el-icon-minus></el-icon-minus></i>缩小</el-button>
-          <el-button type="primary" @click.prevent="expandCollapseAll(false)"><i class="el-icon"><el-icon-plus></el-icon-plus></i>展开</el-button>
-          <el-button type="primary" @click.prevent="expandCollapseAll(true)"><i class="el-icon"><el-icon-minus></el-icon-minus></i>收缩</el-button>
-          <el-button type="primary" @click.prevent="help"><i class="el-icon"><el-icon-help></el-icon-help></i>帮助</el-button>
-        </el-button-group>
-      </div>
+      <tool-box @changePremises="changePremises" @expandCollapseAll="expandCollapseAll"
+            @zoomIn="zoomIn" @zoomOut="zoomOut" @toggleFullScreen="toggleFullScreen"
+            @exportSQL="exportSQL" @exportDiagram="exportDiagram"
+            @showRecordTextPanel="showRecordTextPanel" @help="help" @settings="showSettingDrawer"></tool-box>
     </div>
     <div class="main-workspace" :style="mainWorkspaceStyle" ref="mainWorkSpace">
       <template v-for="(stageDataItem, index) in data" :key="`stage_${index}`">
@@ -28,7 +19,7 @@
           <div class="workspace-column left-column"  v-if="stageDataItem.leftData" ref="leftWorkSpace">
             <tree-data-node v-model="stageDataItem.leftData" :direction="direction"></tree-data-node>
           </div>
-          <div class="workspace-column right-column" v-if="stageDataItem.rightData" ref="rightWorkSpace">
+          <div class="workspace-column right-column" v-if="stageDataItem.rightData && (nodeShowMode == 'all' || nodeShowMode == 'frame')" ref="rightWorkSpace">
             <tree-data-node v-model="stageDataItem.rightData" direction="right"></tree-data-node>
           </div>
         </div>
@@ -38,11 +29,17 @@
     <export-dialog ref="exportDialog" @exportPNG="exportPNG" @exportPDF="exportPDF"></export-dialog>
     <show-sql-dialog ref="showSqlDialog"></show-sql-dialog>
     <setting-premises-dialog ref="settingPremisesDialog" @settingPremisesId="changePremisesId"></setting-premises-dialog>
+    <text-panel ref="textPanel"></text-panel>
+    <setting-drawer ref="settingDrawer"></setting-drawer>
+
     <!-- https://www.npmjs.com/package/vue3-contextmenu -->
     <context-menu name="context-menu-1">
       <context-menu-submenu :label="'复制'" v-if="isSupportClipboard">
         <context-menu-item @itemClickHandle="copyId">ID</context-menu-item>
         <context-menu-item @itemClickHandle="copyTitle">名称</context-menu-item>
+        <template v-if="currentContextMenuNode && currentContextMenuNode.group == 'rightGroup'">
+          <context-menu-item @itemClickHandle="copySSPId">sspId</context-menu-item>
+        </template>
         <context-menu-item @itemClickHandle="copyDetail">详细信息</context-menu-item>
       </context-menu-submenu>
       <context-menu-item @itemClickHandle="renameDataNode">重命名</context-menu-item>
@@ -61,7 +58,7 @@ import ClipboardJS from 'clipboard'
 import { jsPlumb, jsPlumbInstance, type ConnectParams, type EndpointOptions, type Connection } from "jsplumb";
 import type { DataNode, DataNodeLevel } from '@/commons/types';
 import { dataNodeLevelItems, DataLevel } from '@/commons/common';
-import { useFixDataTreeStore } from '@/stores/common'
+import { useFixDataTreeStore, useDrawerSettingStore } from '@/stores/common'
 import { getTreeData } from '@/commons/services';
 import ExportDialog from '../components/ExportDialog.vue'
 import initIntroJs from './workspaceIntro'
@@ -131,7 +128,11 @@ interface ComponentData {
   /**
    * 加载状态
    */
-  loading: boolean
+  loading: boolean,
+  /**
+   * 当前右键点击的数据节点
+   */
+  currentContextMenuNode?: DataNode | null
 }
 
 export default {
@@ -207,7 +208,8 @@ export default {
               // 不限制节点的连线数量
               maxConnections: -1
             },
-            dataNodeLevelItems
+            dataNodeLevelItems,
+            currentContextMenuNode: null
         }
     },
     computed: {
@@ -225,6 +227,9 @@ export default {
        */
       currentDataNodeLevel() {
         return useFixDataTreeStore().getCurrentLevel();
+      },
+      nodeShowMode() {
+        return useDrawerSettingStore().getShowNodeMode();
       }
     },
     methods: {
@@ -578,12 +583,25 @@ export default {
         this.premisesIds = premisesId.split(",");
         this.init();
       },
+      showRecordTextPanel (this:any, e:KeyboardEvent) {
+        if (!!e) {
+          e.preventDefault();
+        }
+        this.$refs.textPanel.openDialog();
+      },
+      showSettingDrawer (this:any) {
+        this.$refs.settingDrawer.showDrawer();
+      },
       copyId (this:any, e:any) {
         ClipboardJS.copy(e.nodeData.id);
         this.$message({ message: "拷贝成功", type: "success" });
       },
       copyTitle (this:any, e:any) {
-        ClipboardJS.copy(e.nodeData.title);
+        ClipboardJS.copy(e.nodeData.title || '未设置');
+        this.$message({ message: "拷贝成功", type: "success" });
+      },
+      copySSPId (this:any, e:any) {
+        ClipboardJS.copy(e.nodeData.data.sspId || '无');
         this.$message({ message: "拷贝成功", type: "success" });
       },
       copyDetail (this:any, e:any) {
@@ -596,6 +614,8 @@ export default {
 
       key('[', this.zoomOut);
       key(']', this.zoomIn);
+      key('ctrl+1', this.showRecordTextPanel);
+
       // 没有替换掉浏览器的默认F11
       // key('F11', this.toggleFullScreen);
 
@@ -612,7 +632,7 @@ export default {
       this.$nextTick(execFun)
 
       events.on('nodeContextMenu', (arg:{event:any, nodeData:DataNode}) => {
-        debugger
+        this.currentContextMenuNode = arg.nodeData;
         emitContext(event, { name: 'context-menu-1', nodeData: arg.nodeData, currentNodeTarget: event.currentTarget })
       });
       // const instance:any = getCurrentInstance();
@@ -692,10 +712,6 @@ export default {
         left 71px
         z-index 103
         // pointer-events: none;
-  .tool-box
-    position: fixed
-    top: 20px
-    right 40px
   .workspace-column-box
     display: flex
     .workspace-column

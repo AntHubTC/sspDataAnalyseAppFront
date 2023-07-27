@@ -36,7 +36,7 @@ const initIntroJs:Function = () => {
         },
         {
             title: '快捷键支持',
-            intro: '<div>[ 缩小<br/>] 放大</div>',
+            intro: '<div>[ 缩小<br/> ] 放大 <br/> ctrl+1 文本记录工具</div>',
             position: 'center',
         },
         {

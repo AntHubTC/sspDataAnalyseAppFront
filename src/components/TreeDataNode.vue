@@ -1,9 +1,9 @@
 <template>
-    <div class="tree-data-node" :class="treeDataNodeClass">
+    <div class="tree-data-node" :class="treeDataNodeClass" v-show="showCurrentNode">
         <tree-data-node-panel v-if="direction === 'left'"
             :dataModel="modelValue" :direction="direction"
-            @toggleShow="nodeToggleShow"
-            ></tree-data-node-panel>
+            @toggleShow="nodeToggleShow">
+        </tree-data-node-panel>
         <transition>
             <div v-show="!modelValue.hideChild && modelValue.items.length" :class="{'node-item-box-z':!!modelValue.items}">
                 <transition-group>
@@ -25,6 +25,7 @@ import { type PropType, getCurrentInstance } from 'vue'
 import type { DataNode } from '@/commons/types'
 import { VueDraggableNext } from 'vue-draggable-next'
 import { events } from '../bus'
+import { useDrawerSettingStore } from '@/stores/common'
 
 const instance:any = getCurrentInstance();
 
@@ -58,6 +59,19 @@ export default {
                 'left-direction': this.direction == 'left',
                 'right-direction': this.direction == 'right'
             }
+        },
+        showCurrentNode () {
+            if (this.modelValue.depth !== 5 || this.direction !== 'left') {
+                return true;
+            }
+            const showNodeMode:String = useDrawerSettingStore().getShowNodeMode()
+            if (this.modelValue.data.type == '1') {
+                return showNodeMode === 'all' || showNodeMode === 'screen';
+            }
+            if (this.modelValue.data.type == '2') {
+                return showNodeMode === 'all' || showNodeMode === 'frame';
+            }
+            return true;
         }
     },
     methods: {

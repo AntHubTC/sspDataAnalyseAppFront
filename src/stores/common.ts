@@ -7,7 +7,7 @@ import { defineStore } from 'pinia'
  */
 
 /**
- * 拖动存储对象
+ * 当前显示树层级
  */
 export const useFixDataTreeStore = defineStore('fixDataTreeStore', () => {
   const currentLevelStore = ref<number>(5)
@@ -21,4 +21,21 @@ export const useFixDataTreeStore = defineStore('fixDataTreeStore', () => {
   }
 
   return { setCurrentLevel, getCurrentLevel }
+})
+
+/**
+ * 当前显示树层级
+ */
+export const useDrawerSettingStore = defineStore('drawerSettingStore', () => {
+  const showNodeModeStore = ref<String>("all")
+
+  function setShowNodeMode(val: String) {
+    showNodeModeStore.value = val;
+  }
+
+  function getShowNodeMode() {
+    return showNodeModeStore.value;
+  }
+
+  return { setShowNodeMode, getShowNodeMode }
 })
