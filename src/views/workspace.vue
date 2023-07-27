@@ -680,6 +680,7 @@ export default {
     },
     unmounted () {
       key.unbind('[]',']');
+      events.off('nodeContextMenu');
     },
     created () {
       this.init();
