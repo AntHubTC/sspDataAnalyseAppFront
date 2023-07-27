@@ -239,21 +239,45 @@ export default {
         const getTreeDataTasks:Promise<any>[] = this.loadPremisesTreeNodeData();
         // 树节点加载成功后，开始计算出所有的线条信息
         Promise.all(getTreeDataTasks).then(() => {
-          this.initLines();
+          this.initEndpointAndLines();
           this.loading = false;
         });
       },
       /**
        * 初始化所有线条信息
        */
-      initLines () {
-        for (let stageDataItem of this.data) {
+      initEndpointAndLines () {
+        let lines:LineConnectParams[] = [];
 
+        let genLineFun: Function = (parentNode:DataNode, childNode:DataNode) => {
+          // 画线条的时候再判断
+          // if (this.isNodeHide(childNode)) {
+          //   // 如果节点隐藏掉了，就不能显示线条了
+          //   return;
+          // }
+          let line:LineConnectParams = {
+              sourceDataNode: childNode,
+              targetDataNode: null, // TODO:: 这里根据需要的时候再计算设置上
+              source: `rmnode_${childNode.nodeType}_${childNode.id}`,
+              target: `sspnode_${childNode.nodeType}_${childNode.data.sspId}`,
+              overlays: [["Arrow", { width: 10, length: 10, location: 0.5 }]]
+            };
+            lines.push(line);
+          }
+
+        for (let stageDataItem of this.data) {
+          // 端点，来源于当前层级左右侧对应的节点id
+
+          // 连线，来源于融媒端节点id和对应的sspId
+          genLineFun(null, stageDataItem.rightData);
+          this.recursionTreeDataFun(stageDataItem.rightData, genLineFun);
         }
       },
+      /**
+       * 加载初始化树节点信息
+       */
       loadPremisesTreeNodeData ():Promise<any>[] {
         this.data = [];
-        // 加载初始化树节点信息
         let getTreeDataTasks:Promise<any>[] = [];
         for (let premisesId of this.premisesIds) {
           getTreeDataTasks.push(getTreeData(premisesId).then((res: { right: DataNode, left: DataNode }) => {
@@ -290,34 +314,6 @@ export default {
         });
 
         return dataNode;
-      },
-      /**
-       * 根据树数据节点信息生成线条连线
-       * 
-       * @param leftData 左树节点
-       * @param rgithData 右树节点
-       */
-      generateLines(leftData:DataNode, rgithData:DataNode):LineConnectParams[] {
-        let lines:LineConnectParams[] = [];
-
-        let execFun: Function = (parentNode:DataNode, childNode:DataNode) => {
-          if (this.isNodeHide(childNode)) {
-            // 如果节点隐藏掉了，就不能显示线条了
-            return;
-          }
-          let line:LineConnectParams = {
-              sourceDataNode: childNode,
-              targetDataNode: parentNode,
-              source: `node_${childNode.nodeType}_${childNode.id}`,
-              target: `node_${parentNode.nodeType}_${parentNode.id}`,
-              overlays: [["Arrow", { width: 10, length: 10, location: 0.5 }]]
-            }
-            lines.push(line);
-        }
-        this.recursionTreeDataFun(leftData, execFun);
-        // TODO::// 现在左右数据一样，不将注释打开
-        // this.recursionTreeDataFun(rgithData, execFun);
-        return lines;
       },
       /**
        * 递归树节点数据执行excFun函数执行操作
@@ -510,6 +506,10 @@ export default {
           });
         }
       },
+      /**
+       * 显示导出图对话框
+       * @param this 当前vue实例
+       */
       exportDiagram (this:{$refs:any}) {
         this.$refs.exportDialog.openDialog();
       },
@@ -583,6 +583,9 @@ export default {
           this.$refs.exportDialog.closeDialog();
         }, () => this.$refs.exportDialog.closeDialog());
       },
+      /**
+       * 显示生成的sql对话框
+       */
       exportSQL (this:any) {
         this.$refs.showSqlDialog.showSql(this.data);
       },
