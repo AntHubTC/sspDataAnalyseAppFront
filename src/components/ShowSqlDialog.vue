@@ -125,7 +125,14 @@ export default {
                         } else if (childNode.depth === 5) {
                             // 点位
                             finalSSPSQL += this.getNodePath(childNode);
-                            finalSSPSQL += `update \`ssp3\`.\`point\` set premises_id = ${parentNode.parent.parent.parent.id}, build_id=${parentNode.parent.parent.id}, unit_id=${parentNode.parent.id}, ele_id=${parentNode.id}`;
+                            if (childNode.data.type == 1) {
+                                // 屏
+                                finalSSPSQL += `update \`ssp3\`.\`point\` set premises_id = ${parentNode.parent.parent.parent.id}, build_id=${parentNode.parent.parent.id}, unit_id=${parentNode.parent.id}, ele_id=${parentNode.id}`;
+                            } else {
+                                // 框
+                                finalSSPSQL += `update \`ssp3\`.\`media\` set premises_id = ${parentNode.parent.parent.parent.id}, build_id=${parentNode.parent.parent.id}, unit_id=${parentNode.parent.id}, elevator_id=${parentNode.id}`;
+                            }
+                            
                         }
                         finalSSPSQL += ` where id=${childNode.id};\r\n`;
                         });

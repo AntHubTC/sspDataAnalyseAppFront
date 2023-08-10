@@ -63,6 +63,21 @@ import { getTreeData } from '@/commons/services';
 import ExportDialog from '../components/ExportDialog.vue'
 import initIntroJs from './workspaceIntro'
 
+interface EndPointData {
+  /**
+   * 节点id
+   */
+  endPointId: string,
+  /**
+   * 节点层级类型
+   */
+  type: string,
+  /**
+   * 节点深度信息
+   */
+  depth: number
+}
+
 interface LineConnectParams extends ConnectParams {
   /**
    * 源数据节点
@@ -102,9 +117,13 @@ interface ComponentData {
    */
   data: StageData[],
   /**
-   * 连线
+   * 端点数据列表
    */
-  lineList: LineConnectParams[],
+  endPointList: EndPointData[][],
+  /**
+   * 连线数据列表
+   */
+  lineList: LineConnectParams[][],
   /**
    * 放大缩小比例
    */
@@ -187,6 +206,7 @@ export default {
             loading: true,
             premisesIds: ["593168", "593563"],
             data: [],
+            endPointList: null,
             lineList: null,
             direction: 'left',
             scale: 0.8,
@@ -240,38 +260,102 @@ export default {
         // 树节点加载成功后，开始计算出所有的线条信息
         Promise.all(getTreeDataTasks).then(() => {
           this.initEndpointAndLines();
+          this.draw();
           this.loading = false;
         });
+      },
+            /**
+       * 绘制线条
+       */
+       drawLines() {
+        // this.$nextTick().then(() => {
+        //   // 连线之前先把连线的关系清除
+        //   this.jsPlumbInstance.reset();
+        //   // 给每个节点添加锚点
+        //   let addEndpoint:Function = (node:DataNode) => {
+        //     if (this.isNodeHide(node)) {
+        //       // 如果节点已经隐藏了就不需要添加锚点了
+        //       return;
+        //     }
+        //     let id = `node_${node.nodeType}_${node.id}`;
+        //     // this.jsPlumbInstance.draggable(id);
+        //     this.jsPlumbInstance.addEndpoint(id, {
+        //         // anchor: ['Bottom', 'Top', 'Left', 'Right'],
+        //         anchor: ['Left', 'Right'],
+        //         overlays: [
+        //           ['Arrow', { width: 10, length: 8, location: 1, direction: 1, foldback: 0.623 }]
+        //         ],
+        //         maxConnections: -1
+        //       }, this.commonLink)
+        //   }
+        //   this.recursionTreeDataFun(this.leftData, (parentNode:DataNode, childNode:DataNode) => {
+        //     addEndpoint(childNode);
+        //   });
+        //   // 开始节点间的连线
+        //   this.lineList.forEach((item:LineConnectParams) => {
+        //     let connection:Connection = this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
+        //     item.sourceDataNode.connectionLines = [connection];
+        //   });
+        //   // 重绘
+        //   this.jsPlumbInstance.repaintEverything();
+        // });
+      },
+      draw () {
+
       },
       /**
        * 初始化所有线条信息
        */
       initEndpointAndLines () {
-        let lines:LineConnectParams[] = [];
+        let lines:Array<LineConnectParams[]> = [[],[],[],[],[]];
+        let endPointDatas:EndPointData[][] = [[],[],[],[],[]];
 
+        // 生成端点功能函数
+        let genEndPointFun: Function = (parentNode:DataNode, childNode:DataNode) => {
+          if (childNode == null) {
+            return null;
+          }
+          // 生成端点id
+          const endPointId:string = childNode.group === 'leftGroup' ? `sspnode_${childNode.nodeType}_${childNode.data.sspId}` : `rmnode_${childNode.nodeType}_${childNode.id}`;
+          // 端点，来源于当前层级左右侧对应的节点id
+          const endPointData:EndPointData = {
+              endPointId: endPointId,
+              type: childNode.nodeType,
+              depth: childNode.depth
+          };
+          endPointDatas[childNode.depth - 1].push(endPointData);
+        }
+        // 生成线条功能函数
         let genLineFun: Function = (parentNode:DataNode, childNode:DataNode) => {
-          // 画线条的时候再判断
-          // if (this.isNodeHide(childNode)) {
-          //   // 如果节点隐藏掉了，就不能显示线条了
-          //   return;
-          // }
-          let line:LineConnectParams = {
+          if (childNode == null) return;
+          // 连线，来源于融媒端节点id和对应的sspId
+          const line:LineConnectParams = {
               sourceDataNode: childNode,
               targetDataNode: null, // TODO:: 这里根据需要的时候再计算设置上
               source: `rmnode_${childNode.nodeType}_${childNode.id}`,
               target: `sspnode_${childNode.nodeType}_${childNode.data.sspId}`,
               overlays: [["Arrow", { width: 10, length: 10, location: 0.5 }]]
-            };
-            lines.push(line);
-          }
+          };
+          lines[childNode.depth - 1].push(line);
+        }
+        // 生成端点和线条功能函数
+        let complexFun: Function = (parentNode:DataNode, childNode:DataNode) => {
+          genEndPointFun(parentNode, childNode);
+          genLineFun(parentNode, childNode);
+        }
 
         for (let stageDataItem of this.data) {
-          // 端点，来源于当前层级左右侧对应的节点id
+          // 左侧数据处理（左侧只生成端点）
+          genEndPointFun(null, stageDataItem.leftData);
+          this.recursionTreeDataFun(stageDataItem.leftData, genEndPointFun);
 
-          // 连线，来源于融媒端节点id和对应的sspId
-          genLineFun(null, stageDataItem.rightData);
-          this.recursionTreeDataFun(stageDataItem.rightData, genLineFun);
+          // 右侧数据处理（右侧生成端点和线条）
+          complexFun(null, stageDataItem.rightData);
+          this.recursionTreeDataFun(stageDataItem.rightData, complexFun);
         }
+
+        this.endPointList = endPointDatas;
+        this.lineList = lines;
       },
       /**
        * 加载初始化树节点信息
@@ -393,42 +477,6 @@ export default {
           node = node.parent;
         }
         return false;
-      },
-      /**
-       * 绘制线条
-       */
-      drawLines() {
-        // this.$nextTick().then(() => {
-        //   // 连线之前先把连线的关系清除
-        //   this.jsPlumbInstance.reset();
-        //   // 给每个节点添加锚点
-        //   let addEndpoint:Function = (node:DataNode) => {
-        //     if (this.isNodeHide(node)) {
-        //       // 如果节点已经隐藏了就不需要添加锚点了
-        //       return;
-        //     }
-        //     let id = `node_${node.nodeType}_${node.id}`;
-        //     // this.jsPlumbInstance.draggable(id);
-        //     this.jsPlumbInstance.addEndpoint(id, {
-        //         // anchor: ['Bottom', 'Top', 'Left', 'Right'],
-        //         anchor: ['Left', 'Right'],
-        //         overlays: [
-        //           ['Arrow', { width: 10, length: 8, location: 1, direction: 1, foldback: 0.623 }]
-        //         ],
-        //         maxConnections: -1
-        //       }, this.commonLink)
-        //   }
-        //   this.recursionTreeDataFun(this.leftData, (parentNode:DataNode, childNode:DataNode) => {
-        //     addEndpoint(childNode);
-        //   });
-        //   // 开始节点间的连线
-        //   this.lineList.forEach((item:LineConnectParams) => {
-        //     let connection:Connection = this.jsPlumbInstance.connect(item, this.jsPlumbConnectOptions);
-        //     item.sourceDataNode.connectionLines = [connection];
-        //   });
-        //   // 重绘
-        //   this.jsPlumbInstance.repaintEverything();
-        // });
       },
       /**
        * 数据节点层级项被点击

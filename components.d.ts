@@ -7,7 +7,6 @@ export {}
 
 declare module 'vue' {
   export interface GlobalComponents {
-    copy: typeof import('./src/components/ToolBox copy.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']
     ElCard: typeof import('element-plus/es')['ElCard']
@@ -33,7 +32,6 @@ declare module 'vue' {
     ExportDialog: typeof import('./src/components/ExportDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SettingDra: typeof import('./src/components/SettingDra.vue')['default']
     SettingDrawer: typeof import('./src/components/SettingDrawer.vue')['default']
     SettingPremisesDialog: typeof import('./src/components/SettingPremisesDialog.vue')['default']
     ShowSqlDialog: typeof import('./src/components/ShowSqlDialog.vue')['default']
